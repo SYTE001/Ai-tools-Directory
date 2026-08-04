@@ -3,140 +3,343 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="siteTitle">Xnovaa.ai — Discover Every AI Tool in One Place</title>
-<meta name="description" id="siteDescription" content="Browse hundreds of curated AI tools across every category. Search, explore, and launch instantly.">
-<link rel="stylesheet" href="assets/css/main.css">
+<title>Admin Dashboard — Xnovaa.ai</title>
+<link rel="stylesheet" href="../assets/css/admin.css">
 </head>
 <body>
 
-<!-- DB Error Banner -->
-<div id="dbErrorBanner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:99999; background:#FF3B30; color:#fff; padding:12px 24px; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.4); align-items:center; gap:16px; font-weight:600;" role="alert">
-  <span>Unable to connect to Supabase database.</span>
-  <button id="dbRetryBtn" style="background:#fff; color:#FF3B30; border:none; padding:6px 14px; border-radius:6px; font-weight:700; cursor:pointer;" aria-label="Retry database connection">Retry</button>
+<!-- 1. LOGIN VIEW -->
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-brand">
+        <div class="login-brand-dot"></div>
+        Xnovaa<span>.ai</span> Admin
+      </div>
+      <div class="login-subtitle">Sign in to manage AI tools and directory content</div>
+    </div>
+
+    <div class="error-msg" id="loginError" role="alert"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="emailInput">Email Address</label>
+        <input type="email" id="emailInput" class="form-input" placeholder="admin@xnovaa.ai" required autocomplete="email" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Email Address">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="passwordInput">Password</label>
+        <input type="password" id="passwordInput" class="form-input" placeholder="••••••••" required autocomplete="current-password" aria-label="Password">
+      </div>
+      <button type="submit" class="btn-primary" id="loginSubmitBtn">Sign In</button>
+    </form>
+  </div>
 </div>
 
-<!-- Toast Container -->
-<div id="toastContainer" role="alert" aria-live="polite"></div>
+<!-- 2. AUTHENTICATED DASHBOARD VIEW -->
+<div class="admin-layout" id="dashboardView" style="display: none;">
+  <!-- DB Error Overlay Banner -->
+  <div id="dbErrorOverlay" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; background:#FF3B30; color:#fff; padding:12px 24px; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.4); align-items:center; gap:16px; font-weight:600;" role="alert">
+    <span>Unable to connect to database.</span>
+    <button id="dbRetryBtn" style="background:#fff; color:#FF3B30; border:none; padding:6px 14px; border-radius:6px; font-weight:700; cursor:pointer;" aria-label="Retry database connection">Retry</button>
+  </div>
 
-<!-- Header Nav -->
-<header>
-  <div class="header-inner">
-    <a href="#" class="brand" aria-label="directory.ai Homepage">
-      <div class="brand-dot"></div>
-      Xnovaa<span>.ai</span>
-    </a>
-    
-    <div class="search-wrap" role="search">
-      <input type="text" id="searchInput" class="search-input" placeholder="Search AI tools..." autocomplete="off" aria-label="Search AI tools">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <button id="clearSearch" class="clear-btn" aria-label="Clear search">✕</button>
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Admin Navigation Sidebar">
+    <div class="sidebar-header">
+      <div class="login-brand-dot"></div>
+      Xnovaa.ai
     </div>
-
-    <div class="nav-actions">
-      <!-- Dark/Light Theme Toggle -->
-      <button id="themeToggle" class="icon-btn" aria-label="Toggle theme" title="Toggle Light/Dark Mode">
-        <svg id="moonIcon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <svg id="sunIcon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-
-      <!-- Configurable GitHub Link -->
-      <a href="https://github.com" id="githubLink" target="_blank" rel="noopener" class="icon-btn" aria-label="GitHub Repository" title="View Source on GitHub">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-        </svg>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-view="overview" href="#" role="button" aria-label="Dashboard Overview">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-view="tools" href="#" role="button" aria-label="AI Tools Management">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Tools
+      </a>
+      <a class="nav-item" data-view="categories" href="#" role="button" aria-label="Category Management">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Categories
+      </a>
+      <a class="nav-item" data-view="featured" href="#" role="button" aria-label="Featured Drag and Drop Manager">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Featured
+      </a>
+      <a class="nav-item" data-view="settings" href="#" role="button" aria-label="Site Settings">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+      <a class="nav-item" data-view="backup" href="#" role="button" aria-label="Data Backup and Restore">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Backup
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="nav-item" id="logoutBtn" style="color: var(--admin-danger);" href="#" role="button" aria-label="Logout">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
       </a>
     </div>
-  </div>
-</header>
+  </aside>
 
-<div class="container">
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-badge">✨ AI Tools Directory</div>
-    <h1 id="heroHeadline">Discover Every AI Tool in One Place.</h1>
-    <p id="heroSubheadline">Browse hundreds of AI tools across every category. Search, explore, and launch instantly.</p>
-  </section>
-
-  <!-- Statistics Grid (Live Supabase Counts) -->
-  <section class="stats-grid" aria-label="Live Directory Statistics">
-    <div class="stat-card">
-      <div class="stat-number" id="toolCount">...</div>
-      <div class="stat-label">AI Tools</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="categoryCount">...</div>
-      <div class="stat-label">Categories</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="featuredCount">...</div>
-      <div class="stat-label">Featured Tools</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="lastUpdatedCount">Active</div>
-      <div class="stat-label">Fresh Updates</div>
-    </div>
-  </section>
-
-  <!-- Featured Collections Section -->
-  <section aria-label="Featured Collections">
-    <div class="section-header">
-      <h2 class="section-title">Featured Collections</h2>
-    </div>
-    <div class="collections-wrap" id="collectionsWrap"></div>
-  </section>
-
-  <!-- Category Filter Bar -->
-  <div class="segmented-wrap">
-    <div class="segmented" id="segmented" role="tablist" aria-label="Categories"></div>
-  </div>
-
-  <!-- Tools Grid -->
-  <main>
-    <div class="grid" id="grid" aria-live="polite"></div>
-
-    <!-- Polished Empty State -->
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          <line x1="8" y1="11" x2="14" y2="11"/>
-        </svg>
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- 1. OVERVIEW SECTION -->
+    <section class="view-section" id="overviewSection">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard Overview</h1>
       </div>
-      <h3 class="empty-title">No AI tools matched your search</h3>
-      <p class="empty-desc">Try another keyword or select a different category to explore available tools.</p>
-      <button class="reset-btn" id="resetBtn" aria-label="Reset all search filters">Reset Filters</button>
-    </div>
+      <div class="dash-stats">
+        <div class="dash-stat-card">
+          <div class="dash-stat-title">Total AI Tools</div>
+          <div class="dash-stat-val" id="statTotalTools">0</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-title">Featured Tools</div>
+          <div class="dash-stat-val" id="statFeaturedTools">0</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-title">Categories</div>
+          <div class="dash-stat-val" id="statTotalCategories">0</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-title">Newest Tool</div>
+          <div class="dash-stat-val" id="statNewestTool" style="font-size:20px;">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TOOLS SECTION -->
+    <section class="view-section" id="toolsSection" style="display: none;">
+      <div class="page-header">
+        <h1 class="page-title">AI Tools Management</h1>
+        <div class="page-actions">
+          <button class="btn-primary" id="openAddToolModal" aria-label="Add New AI Tool">+ Add New Tool</button>
+        </div>
+      </div>
+
+      <div class="table-controls">
+        <div class="search-filter-wrap">
+          <input type="text" id="adminSearchInput" class="form-input" placeholder="Search tool name or description..." aria-label="Search tools table">
+          <select id="filterCategorySelect" class="form-select" style="width:160px;" aria-label="Filter tools by category"></select>
+          <select id="sortOrderSelect" class="form-select" style="width:150px;" aria-label="Sort tools order">
+            <option value="Newest">Newest First</option>
+            <option value="Oldest">Oldest First</option>
+            <option value="A-Z">A-Z</option>
+            <option value="Z-A">Z-A</option>
+            <option value="Featured First">Featured First</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" aria-label="AI Tools List">
+          <thead>
+            <tr>
+              <th>Logo</th>
+              <th>Tool Name</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="toolsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. CATEGORIES SECTION -->
+    <section class="view-section" id="categoriesSection" style="display: none;">
+      <div class="page-header">
+        <h1 class="page-title">Category Management</h1>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 2fr; gap:24px;">
+        <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px;">
+          <h3 style="margin-top:0;">Add New Category</h3>
+          <form id="addCategoryForm">
+            <div class="form-group">
+              <label class="form-label" for="catNameInput">Category Name *</label>
+              <input type="text" id="catNameInput" class="form-input" placeholder="e.g. Productivity" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="catIconInput">Category Emoji / Icon</label>
+              <input type="text" id="catIconInput" class="form-input" placeholder="e.g. 📚">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="catColorInput">Accent Color</label>
+              <input type="color" id="catColorInput" class="form-input" value="#4F8CFF" style="height:40px; padding:2px;">
+            </div>
+            <button type="submit" class="btn-primary">+ Create Category</button>
+          </form>
+        </div>
+
+        <div>
+          <h3 style="margin-top:0;">Existing Categories</h3>
+          <div id="categoriesList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. FEATURED ORDER SECTION -->
+    <section class="view-section" id="featuredSection" style="display: none;">
+      <div class="page-header">
+        <h1 class="page-title">Featured Tools Manager</h1>
+      </div>
+      <p style="color:var(--admin-text-muted);">Drag and drop tools to customize their priority display order on the homepage.</p>
+      <div id="featuredOrderList" style="max-width:600px;"></div>
+    </section>
+
+    <!-- 5. SETTINGS SECTION -->
+    <section class="view-section" id="settingsSection" style="display: none;">
+      <div class="page-header">
+        <h1 class="page-title">Site Settings</h1>
+      </div>
+      <div style="max-width:560px; background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:28px;">
+        <form id="settingsForm">
+          <div class="form-group">
+            <label class="form-label" for="settingTitleInput">Public Site Title</label>
+            <input type="text" id="settingTitleInput" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="settingGithubInput">GitHub Repository URL</label>
+            <input type="url" id="settingGithubInput" class="form-input" placeholder="https://github.com/user/repo">
+          </div>
+          <button type="submit" class="btn-primary">Save Settings</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 6. BACKUP SECTION -->
+    <section class="view-section" id="backupSection" style="display: none;">
+      <div class="page-header">
+        <h1 class="page-title">Data Backup & Restore</h1>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:720px;">
+        <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px;">
+          <h3>Export JSON</h3>
+          <p style="color:var(--admin-text-muted); font-size:14px;">Download a JSON file containing all tools, categories, and site settings.</p>
+          <button class="btn-secondary" id="exportBackupBtn">📥 Export Backup JSON</button>
+        </div>
+        <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px;">
+          <h3>Restore JSON</h3>
+          <p style="color:var(--admin-text-muted); font-size:14px;">Restore data from a previously exported JSON backup file.</p>
+          <input type="file" id="importBackupInput" accept=".json" style="display:none;">
+          <button class="btn-secondary" id="importBackupBtn">📤 Import Backup JSON</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
-<footer>
-  <div class="container">
-    &copy; 2026 Xnovaa.ai • Crafted for AI enthusiasts worldwide.
+<!-- ADD/EDIT TOOL MODAL -->
+<div class="modal-overlay" id="toolModal" role="dialog" aria-modal="true" aria-labelledby="toolModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="toolModalTitle">Add New AI Tool</h3>
+      <button class="btn-icon" id="closeToolModal" aria-label="Close modal">✕</button>
+    </div>
+    <form id="toolForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="toolNameInput">Tool Name *</label>
+          <input type="text" id="toolNameInput" class="form-input" required placeholder="e.g. CodeForge">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="toolDescInput">Description / Tagline *</label>
+          <textarea id="toolDescInput" class="form-textarea" rows="2" required placeholder="Generate & refactor code from prompts..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="toolUrlInput">Website URL *</label>
+          <input type="url" id="toolUrlInput" class="form-input" required placeholder="https://example.com">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label class="form-label" for="toolCategorySelect">Category *</label>
+            <select id="toolCategorySelect" class="form-select" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="toolColorInput">Accent Color</label>
+            <input type="color" id="toolColorInput" class="form-input" value="#4F8CFF" style="height:40px; padding:2px;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="toolLogoInput">Logo Upload (PNG, SVG, WEBP)</label>
+          <input type="file" id="toolLogoInput" class="form-input" accept=".png,.svg,.webp,.jpg">
+        </div>
+        <div class="toggle-wrap">
+          <input type="checkbox" id="toolFeaturedToggle">
+          <label for="toolFeaturedToggle">Mark as Featured / Sponsored</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelToolModalBtn">Cancel</button>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 24px;">Save Tool</button>
+      </div>
+    </form>
   </div>
-</footer>
+</div>
 
-<script src="assets/js/toast.js"></script>
-<script src="assets/js/storage.js"></script>
-<script src="assets/js/theme.js"></script>
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="deleteModalTitle">Delete this tool?</h3>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--admin-text-muted); margin:0;">Are you sure you want to permanently delete this AI tool? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelDeleteBtn">Cancel</button>
+      <button class="btn-primary" id="confirmDeleteBtn" style="background:var(--admin-danger); width:auto;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CATEGORY MODAL -->
+<div class="modal-overlay" id="categoryEditModal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="catModalTitle">Edit Category</h3>
+      <button class="btn-icon" id="closeCategoryEditModal" aria-label="Close modal">✕</button>
+    </div>
+    <form id="categoryEditForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="catEditNameInput">Category Name *</label>
+          <input type="text" id="catEditNameInput" class="form-input" required placeholder="e.g. Productivity">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="catEditIconInput">Category Emoji / Icon</label>
+          <input type="text" id="catEditIconInput" class="form-input" placeholder="e.g. 📚">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="catEditColorInput">Accent Color</label>
+          <input type="color" id="catEditColorInput" class="form-input" value="#4F8CFF" style="height:40px; padding:2px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelCategoryEditBtn">Cancel</button>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 24px;">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toastContainer" role="alert" aria-live="polite"></div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/storage.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/supabase.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="../assets/js/supabase.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
 
 </body>
 </html>
