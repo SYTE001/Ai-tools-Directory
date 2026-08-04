@@ -7,10 +7,9 @@ const StorageService = {
   },
 
   DEFAULT_SETTINGS: {
-    siteTitle: "directory.ai — Discover Every AI Tool in One Place",
+    siteTitle: "Xnovaa.ai — Discover Every AI Tool in One Place",
     siteDescription: "Browse hundreds of curated AI tools across every category. Search, explore, and launch instantly.",
-    githubUrl: "https://github.com",
-    authHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
+    githubUrl: "https://github.com"
   },
 
   cachedSettings: null,

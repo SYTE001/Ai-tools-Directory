@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard — directory.ai</title>
+<title>Admin Dashboard — Xnovaa.ai</title>
 <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <div class="login-header">
       <div class="login-brand">
         <div class="login-brand-dot"></div>
-        directory<span>.ai</span> Admin
+        Xnovaa<span>.ai</span> Admin
       </div>
       <div class="login-subtitle">Sign in to manage AI tools and directory content</div>
     </div>
@@ -23,8 +23,8 @@
 
     <form id="loginForm">
       <div class="form-group">
-        <label class="form-label" for="usernameInput">Email Address / Username</label>
-        <input type="text" id="usernameInput" class="form-input" placeholder="admin@directory.ai" required autocomplete="username" aria-label="Email or Username">
+        <label class="form-label" for="emailInput">Email Address</label>
+        <input type="email" id="emailInput" class="form-input" placeholder="admin@xnovaa.ai" required autocomplete="email" aria-label="Email Address">
       </div>
       <div class="form-group">
         <label class="form-label" for="passwordInput">Password</label>
@@ -47,7 +47,7 @@
   <aside class="sidebar" aria-label="Admin Navigation Sidebar">
     <div class="sidebar-header">
       <div class="login-brand-dot"></div>
-      directory.ai
+      Xnovaa.ai
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" data-view="overview" href="#" role="button" aria-label="Dashboard Overview">
@@ -209,10 +209,6 @@
             <label class="form-label" for="settingGithubInput">GitHub Repository URL</label>
             <input type="url" id="settingGithubInput" class="form-input" placeholder="https://github.com/user/repo">
           </div>
-          <div class="form-group">
-            <label class="form-label" for="settingPasswordInput">Change Admin Password (leave blank to keep current)</label>
-            <input type="password" id="settingPasswordInput" class="form-input" placeholder="New Password">
-          </div>
           <button type="submit" class="btn-primary">Save Settings</button>
         </form>
       </div>
@@ -340,9 +336,9 @@
 
 <script src="../assets/js/toast.js"></script>
 <script src="../assets/js/storage.js"></script>
-<script src="../assets/js/auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/supabase.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/admin.js"></script>
 
 </body>

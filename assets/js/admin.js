@@ -236,7 +236,21 @@
     }
   }
 
-  // Handle Login Submission
+  // Subscribe to Supabase Auth state changes automatically
+  AuthService.onAuthStateChange(async (event, session) => {
+    if (session) {
+      loginView.style.display = "none";
+      dashboardView.style.display = "flex";
+      await loadAdminData();
+      await loadSettings();
+      renderDashboard();
+    } else {
+      loginView.style.display = "flex";
+      dashboardView.style.display = "none";
+    }
+  });
+
+  // Handle Login Submission via Supabase Auth
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -244,10 +258,13 @@
       setButtonLoading(loginBtn, true, "Signing In...");
 
       try {
-        const user = document.getElementById("usernameInput").value.trim();
-        const pass = document.getElementById("passwordInput").value.trim();
+        const emailInput = document.getElementById("emailInput") || document.getElementById("usernameInput");
+        const passwordInput = document.getElementById("passwordInput");
 
-        const res = await AuthService.login(user, pass);
+        const email = emailInput ? emailInput.value.trim() : "";
+        const password = passwordInput ? passwordInput.value.trim() : "";
+
+        const res = await AuthService.login(email, password);
         if (res.success) {
           loginError.style.display = "none";
           showToast("Signed in successfully!", "success");
@@ -264,9 +281,10 @@
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", (e) => {
+    logoutBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      AuthService.logout();
+      await AuthService.logout();
+      await checkAuth();
     });
   }
 
@@ -1159,13 +1177,8 @@
       try {
         const siteTitle = document.getElementById("settingTitleInput").value.trim();
         const githubUrl = document.getElementById("settingGithubInput").value.trim();
-        const newPassword = document.getElementById("settingPasswordInput").value.trim();
 
         const newSettings = { siteTitle, githubUrl };
-
-        if (newPassword) {
-          newSettings.authHash = await AuthService.hashPassword(newPassword);
-        }
 
         await StorageService.saveSettings(newSettings);
         siteSettings = StorageService.getSettings();
