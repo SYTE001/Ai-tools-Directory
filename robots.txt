@@ -1,0 +1,6 @@
+# robots.txt for Xnovaa.ai AI Tools Directory
+User-agent: *
+Allow: /
+Disallow: /admin/
+
+Sitemap: https://xnovaa.ai/sitemap.xml

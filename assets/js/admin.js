@@ -172,7 +172,7 @@
         if (dbErrorOverlay) dbErrorOverlay.style.display = "none";
         adminCategories = categoryData || [];
 
-        // Process tools mapping category_id relationships
+        // Process tools mapping category_id relationships & new status/homepage_position fields
         adminTools = (toolsData || []).map(t => {
           let categoryName = t.category;
           if (t.categories && t.categories.name) {
@@ -183,7 +183,10 @@
           }
           return {
             ...t,
-            category: categoryName || "Uncategorized"
+            category: categoryName || "Uncategorized",
+            status: t.status || "published",
+            homepage_position: t.homepage_position || (t.featured || t.sponsored ? "featured" : "none"),
+            is_new_release: !!t.is_new_release
           };
         });
 
@@ -314,11 +317,12 @@
     renderCategoryOptions();
     renderToolsTable();
     renderCategoriesManager();
+    ensureModalFields();
   }
 
   // ===== 1. OVERVIEW STATS =====
   function renderOverviewStats() {
-    const featuredCount = adminTools.filter(t => t.featured || t.sponsored).length;
+    const featuredCount = adminTools.filter(t => t.featured || t.sponsored || t.homepage_position === 'featured' || t.homepage_position === 'hero' || t.homepage_position === 'sponsor').length;
     const newestTool = adminTools.length > 0 ? adminTools[0].name : "None";
 
     document.getElementById("statTotalTools").textContent = adminTools.length;
@@ -342,6 +346,91 @@
     }
   }
 
+  // XSS & Security Sanitization Helpers
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function sanitizeUrl(url) {
+    if (!url) return '#';
+    const clean = String(url).trim();
+    if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('#') || clean.startsWith('/')) {
+      return escapeHtml(clean);
+    }
+    return '#';
+  }
+
+  // Inject Status and Homepage Position form controls dynamically if absent in static HTML
+  function ensureModalFields() {
+    const modalBody = document.querySelector("#toolForm .modal-body");
+    if (!modalBody) return;
+
+    if (!document.getElementById("toolStatusSelect")) {
+      const statusGroup = document.createElement("div");
+      statusGroup.className = "form-group";
+      statusGroup.innerHTML = `
+        <label class="form-label" for="toolStatusSelect">Publication Status *</label>
+        <select id="toolStatusSelect" class="form-select" required>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+          <option value="archived">Archived</option>
+        </select>
+      `;
+      modalBody.insertBefore(statusGroup, modalBody.querySelector(".toggle-wrap") || null);
+    }
+
+    if (!document.getElementById("toolHomepagePosSelect")) {
+      const posGroup = document.createElement("div");
+      posGroup.className = "form-group";
+      posGroup.innerHTML = `
+        <label class="form-label" for="toolHomepagePosSelect">Homepage Position</label>
+        <select id="toolHomepagePosSelect" class="form-select">
+          <option value="none">None (Standard)</option>
+          <option value="featured">Featured</option>
+          <option value="hero">Hero Showcase</option>
+          <option value="sponsor">Sponsor Spotlight</option>
+        </select>
+      `;
+      modalBody.insertBefore(posGroup, modalBody.querySelector(".toggle-wrap") || null);
+    }
+
+    if (!document.getElementById("toolNewReleaseToggle")) {
+      const toggleGroup = document.createElement("div");
+      toggleGroup.className = "toggle-wrap";
+      toggleGroup.innerHTML = `
+        <input type="checkbox" id="toolNewReleaseToggle">
+        <label for="toolNewReleaseToggle">Show in Newly Added section</label>
+      `;
+      modalBody.insertBefore(toggleGroup, modalBody.querySelector(".toggle-wrap") || null);
+    }
+  }
+
+  // Field Validation Helper
+  function validateToolFields(status, homepagePosition, isNewRelease = false) {
+    const validStatuses = ["draft", "published", "archived"];
+    const validPositions = ["none", "featured", "hero", "sponsor"];
+
+    if (!validStatuses.includes(status)) {
+      showToast(`Invalid status value: ${status}`, "error");
+      return false;
+    }
+    if (!validPositions.includes(homepagePosition)) {
+      showToast(`Invalid homepage position value: ${homepagePosition}`, "error");
+      return false;
+    }
+    if (typeof isNewRelease !== "boolean") {
+      showToast(`Invalid is_new_release value`, "error");
+      return false;
+    }
+    return true;
+  }
+
   function renderToolsTable() {
     const tbody = document.getElementById("toolsTableBody");
     if (!tbody) return;
@@ -358,7 +447,7 @@
     filtered.sort((a, b) => {
       if (toolSortOrder === "A-Z") return a.name.localeCompare(b.name);
       if (toolSortOrder === "Z-A") return b.name.localeCompare(a.name);
-      if (toolSortOrder === "Featured First") return ((b.featured || b.sponsored) ? 1 : 0) - ((a.featured || a.sponsored) ? 1 : 0);
+      if (toolSortOrder === "Featured First") return ((b.featured || b.sponsored || b.homepage_position === 'featured' || b.homepage_position === 'hero') ? 1 : 0) - ((a.featured || a.sponsored || a.homepage_position === 'featured' || a.homepage_position === 'hero') ? 1 : 0);
       const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
       const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
       if (toolSortOrder === "Oldest") return dateA - dateB;
@@ -379,33 +468,61 @@
     tbody.innerHTML = filtered.map(t => {
       const isSupabaseLogo = t.logo && t.logo.startsWith("http");
       const isLocalLogo = t.logo && !isSupabaseLogo && (t.logo.endsWith(".png") || t.logo.endsWith(".svg") || t.logo.endsWith(".webp"));
-      const bgCol = t.accent_color || t.color || '#4F8CFF';
+      const bgCol = escapeHtml(t.accent_color || t.color || '#4F8CFF');
       let logoStyle;
       if (isSupabaseLogo) {
-          logoStyle = `background-image:url('${t.logo}'); background-size:cover; background-position:center; background-color:${bgCol};`;
+          logoStyle = `background-image:url('${sanitizeUrl(t.logo)}'); background-size:cover; background-position:center; background-color:${bgCol};`;
       } else if (isLocalLogo) {
-          logoStyle = `background-image:url('../assets/logos/${t.logo}'); background-size:cover; background-position:center; background-color:${bgCol};`;
+          logoStyle = `background-image:url('../assets/logos/${escapeHtml(t.logo)}'); background-size:cover; background-position:center; background-color:${bgCol};`;
       } else {
           logoStyle = `background:${bgCol}`;
       }
-      const logoText = (isSupabaseLogo || isLocalLogo) ? '' : t.name.slice(0,2).toUpperCase();
+      const logoText = (isSupabaseLogo || isLocalLogo) ? '' : escapeHtml(t.name.slice(0,2).toUpperCase());
 
       const dateRaw = t.updated_at || t.created_at;
       const formattedDate = dateRaw ? new Date(dateRaw).toISOString().slice(0,10) : 'Recent';
 
+      const nameEsc = escapeHtml(t.name);
+      const catEsc = escapeHtml(t.category);
+      const descEsc = escapeHtml(t.description || '-');
+      const idEsc = escapeHtml(t.id);
+
+      const statusVal = t.status || 'published';
+      const posVal = t.homepage_position || (t.featured || t.sponsored ? 'featured' : 'none');
+
+      let statusBadge = '';
+      if (statusVal === 'published') {
+        statusBadge = `<span class="badge" style="background:rgba(52, 199, 89, 0.15); color:#34C759; border:1px solid rgba(52, 199, 89, 0.3); font-weight:700;">Published</span>`;
+      } else if (statusVal === 'draft') {
+        statusBadge = `<span class="badge" style="background:rgba(255, 149, 0, 0.15); color:#FF9500; border:1px solid rgba(255, 149, 0, 0.3); font-weight:700;">Draft</span>`;
+      } else {
+        statusBadge = `<span class="badge" style="background:rgba(142, 142, 147, 0.15); color:#8E8E93; border:1px solid rgba(142, 142, 147, 0.3); font-weight:700;">Archived</span>`;
+      }
+
+      let posBadge = '';
+      if (posVal === 'hero') {
+        posBadge = `<span class="badge badge-featured" style="background:rgba(79,140,255,0.2); color:#4F8CFF;">Hero</span>`;
+      } else if (posVal === 'sponsor') {
+        posBadge = `<span class="badge badge-featured" style="background:rgba(245,158,11,0.2); color:#F59E0B;">Sponsor</span>`;
+      } else if (posVal === 'featured' || t.featured || t.sponsored) {
+        posBadge = `<span class="badge badge-featured">Featured</span>`;
+      } else {
+        posBadge = `<span style="color:var(--admin-text-muted)">Standard</span>`;
+      }
+
       return `
         <tr>
           <td><div class="table-logo" style="${logoStyle}">${logoText}</div></td>
-          <td><strong>${t.name}</strong></td>
-          <td><span class="badge badge-category">${t.category}</span></td>
-          <td style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--admin-text-muted);">${t.description || '-'}</td>
-          <td>${t.featured || t.sponsored ? '<span class="badge badge-featured">Featured</span>' : '<span style="color:var(--admin-text-muted)">Standard</span>'}</td>
+          <td><strong>${nameEsc}</strong></td>
+          <td><span class="badge badge-category">${catEsc}</span></td>
+          <td style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--admin-text-muted);">${descEsc}</td>
+          <td><div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">${statusBadge} ${posBadge}</div></td>
           <td><span style="font-size:12px; color:var(--admin-text-muted);">${formattedDate}</span></td>
           <td>
             <div class="action-btns">
-              <button class="btn-icon" data-action="edit" data-id="${t.id}" title="Edit tool" aria-label="Edit ${t.name}">✏️</button>
-              <button class="btn-icon" data-action="duplicate" data-id="${t.id}" title="Duplicate tool" aria-label="Duplicate ${t.name}">📋</button>
-              <button class="btn-icon danger" data-action="delete" data-id="${t.id}" title="Delete tool" aria-label="Delete ${t.name}">🗑️</button>
+              <button class="btn-icon" data-action="edit" data-id="${idEsc}" title="Edit tool" aria-label="Edit ${nameEsc}">✏️</button>
+              <button class="btn-icon" data-action="duplicate" data-id="${idEsc}" title="Duplicate tool" aria-label="Duplicate ${nameEsc}">📋</button>
+              <button class="btn-icon danger" data-action="delete" data-id="${idEsc}" title="Delete tool" aria-label="Delete ${nameEsc}">🗑️</button>
             </div>
           </td>
         </tr>
@@ -460,6 +577,16 @@
       editingToolId = null;
       document.getElementById("toolModalTitle").textContent = "Add New AI Tool";
       toolForm.reset();
+      ensureModalFields();
+
+      const statusSelect = document.getElementById("toolStatusSelect");
+      if (statusSelect) statusSelect.value = "published";
+      const posSelect = document.getElementById("toolHomepagePosSelect");
+      if (posSelect) posSelect.value = "none";
+
+      const newReleaseToggle = document.getElementById("toolNewReleaseToggle");
+      if (newReleaseToggle) newReleaseToggle.checked = false;
+
       openModal(toolModal);
     });
   }
@@ -476,6 +603,8 @@
     if (!tool) return;
 
     editingToolId = id;
+    ensureModalFields();
+
     document.getElementById("toolModalTitle").textContent = "Edit AI Tool";
     document.getElementById("toolNameInput").value = tool.name || "";
     document.getElementById("toolDescInput").value = tool.description || "";
@@ -493,6 +622,14 @@
 
     document.getElementById("toolColorInput").value = tool.accent_color || tool.color || "#4F8CFF";
     document.getElementById("toolFeaturedToggle").checked = !!(tool.featured || tool.sponsored);
+
+    const newReleaseToggle = document.getElementById("toolNewReleaseToggle");
+    if (newReleaseToggle) newReleaseToggle.checked = !!tool.is_new_release;
+
+    const statusSelect = document.getElementById("toolStatusSelect");
+    if (statusSelect) statusSelect.value = tool.status || "published";
+    const posSelect = document.getElementById("toolHomepagePosSelect");
+    if (posSelect) posSelect.value = tool.homepage_position || (tool.featured || tool.sponsored ? "featured" : "none");
 
     openModal(toolModal);
   }
@@ -515,6 +652,9 @@
       accent_color: existing.accent_color || existing.color,
       featured: existing.featured,
       sponsored: existing.sponsored,
+      status: existing.status || "published",
+      homepage_position: existing.homepage_position || "none",
+      is_new_release: !!existing.is_new_release,
       logo: existing.logo,
       created_at: new Date().toISOString()
     };
@@ -558,6 +698,8 @@
   if (toolForm) {
     toolForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      ensureModalFields();
+
       const submitBtn = toolForm.querySelector('button[type="submit"]');
       const logoInput = document.getElementById("toolLogoInput");
       const file = logoInput && logoInput.files.length > 0 ? logoInput.files[0] : null;
@@ -571,8 +713,21 @@
         const website = document.getElementById("toolUrlInput").value.trim();
         const selectedCatId = document.getElementById("toolCategorySelect").value;
         const accent_color = document.getElementById("toolColorInput").value;
-        const featured = document.getElementById("toolFeaturedToggle").checked;
-        const sponsored = featured;
+        
+        const statusSelect = document.getElementById("toolStatusSelect");
+        const posSelect = document.getElementById("toolHomepagePosSelect");
+        const newReleaseToggle = document.getElementById("toolNewReleaseToggle");
+
+        const status = statusSelect ? statusSelect.value : "published";
+        const homepage_position = posSelect ? posSelect.value : "none";
+        const is_new_release = newReleaseToggle ? newReleaseToggle.checked : false;
+
+        if (!validateToolFields(status, homepage_position, is_new_release)) {
+          return;
+        }
+
+        const featured = homepage_position === "featured" || homepage_position === "hero" || document.getElementById("toolFeaturedToggle").checked;
+        const sponsored = homepage_position === "sponsor" || featured;
 
         const matchedCat = adminCategories.find(c => String(c.id) === String(selectedCatId));
         const categoryName = matchedCat ? matchedCat.name : "Uncategorized";
@@ -621,6 +776,9 @@
             accent_color,
             featured,
             sponsored,
+            status,
+            homepage_position,
+            is_new_release,
             updated_at: new Date().toISOString()
           };
           if (logoUrl) updateData.logo = logoUrl;
@@ -663,6 +821,9 @@
             accent_color,
             featured,
             sponsored,
+            status,
+            homepage_position,
+            is_new_release,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -784,12 +945,12 @@
       <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:10px; margin-bottom:8px;">
         <div style="display:flex; align-items:center; gap:10px;">
           <span style="font-size:18px;">${c.icon || '📁'}</span>
-          <strong>${c.name}</strong>
-          ${c.color ? `<span style="width:12px; height:12px; border-radius:50%; background:${c.color}; display:inline-block; margin-left:6px;" title="Color: ${c.color}"></span>` : ''}
+          <strong>${escapeHtml(c.name)}</strong>
+          ${c.color ? `<span style="width:12px; height:12px; border-radius:50%; background:${escapeHtml(c.color)}; display:inline-block; margin-left:6px;" title="Color: ${escapeHtml(c.color)}"></span>` : ''}
         </div>
         <div style="display:flex; gap:6px;">
-          ${c.name !== 'All' ? `<button class="btn-icon" data-action="editCat" data-id="${c.id}" title="Edit category" aria-label="Edit category ${c.name}">✏️</button>` : ''}
-          ${c.name !== 'All' ? `<button class="btn-icon danger" data-action="deleteCat" data-id="${c.id}" title="Delete category" aria-label="Delete category ${c.name}">🗑️</button>` : ''}
+          ${c.name !== 'All' ? `<button class="btn-icon" data-action="editCat" data-id="${escapeHtml(c.id)}" title="Edit category" aria-label="Edit category ${escapeHtml(c.name)}">✏️</button>` : ''}
+          ${c.name !== 'All' ? `<button class="btn-icon danger" data-action="deleteCat" data-id="${escapeHtml(c.id)}" title="Delete category" aria-label="Delete category ${escapeHtml(c.name)}">🗑️</button>` : ''}
         </div>
       </div>
     `).join("");
@@ -971,7 +1132,7 @@
     container.setAttribute("aria-label", "Featured Tools Order Manager");
 
     const featuredTools = adminTools
-      .filter(t => t.featured || t.sponsored)
+      .filter(t => t.featured || t.sponsored || t.homepage_position === 'featured' || t.homepage_position === 'hero' || t.homepage_position === 'sponsor')
       .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 
     if (featuredTools.length === 0) {
@@ -984,20 +1145,20 @@
     container.innerHTML = featuredTools.map((t, idx) => `
       <div class="drag-item" 
            draggable="true" 
-           data-id="${t.id}" 
+           data-id="${escapeHtml(t.id)}" 
            data-index="${idx}" 
            style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; margin-bottom:10px; cursor:grab;" 
            tabindex="0" 
            role="listitem"
-           aria-label="${t.name}, position ${idx + 1} of ${totalCount}. Press Arrow Up or Down to reorder, or drag to move.">
+           aria-label="${escapeHtml(t.name)}, position ${idx + 1} of ${totalCount}. Press Arrow Up or Down to reorder, or drag to move.">
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="color:var(--admin-text-muted); font-size:18px; cursor:grab;" aria-hidden="true">☰</span>
-          <strong>${t.name}</strong>
-          <span class="badge badge-category">${t.category}</span>
+          <strong>${escapeHtml(t.name)}</strong>
+          <span class="badge badge-category">${escapeHtml(t.category)}</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:12px; color:var(--admin-text-muted);">Order: ${t.order_index ?? idx}</span>
-          <span class="badge badge-featured">Featured</span>
+          <span class="badge badge-featured">${escapeHtml(t.homepage_position || 'Featured')}</span>
         </div>
       </div>
     `).join("");
@@ -1063,7 +1224,7 @@
 
   function moveFeaturedItem(currentIndex, direction) {
     const featuredTools = adminTools
-      .filter(t => t.featured || t.sponsored)
+      .filter(t => t.featured || t.sponsored || t.homepage_position === 'featured' || t.homepage_position === 'hero' || t.homepage_position === 'sponsor')
       .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 
     const targetIndex = currentIndex + direction;
@@ -1163,8 +1324,12 @@
   }
 
   function renderSettingsForm() {
-    document.getElementById("settingTitleInput").value = siteSettings.siteTitle || "";
-    document.getElementById("settingGithubInput").value = siteSettings.githubUrl || "";
+    const titleEl = document.getElementById("settingTitleInput");
+    const githubEl = document.getElementById("settingGithubInput");
+    const twitterEl = document.getElementById("settingTwitterInput");
+    if (titleEl) titleEl.value = siteSettings.siteTitle || "";
+    if (githubEl) githubEl.value = siteSettings.githubUrl || "";
+    if (twitterEl) twitterEl.value = siteSettings.twitterUrl || "";
   }
 
   const settingsForm = document.getElementById("settingsForm");
@@ -1175,14 +1340,22 @@
       setButtonLoading(submitBtn, true, "Saving Settings...");
 
       try {
-        const siteTitle = document.getElementById("settingTitleInput").value.trim();
-        const githubUrl = document.getElementById("settingGithubInput").value.trim();
+        const titleEl = document.getElementById("settingTitleInput");
+        const githubEl = document.getElementById("settingGithubInput");
+        const twitterEl = document.getElementById("settingTwitterInput");
 
-        const newSettings = { siteTitle, githubUrl };
+        const siteTitle = titleEl ? titleEl.value.trim() : "";
+        const githubUrl = githubEl ? githubEl.value.trim() : "";
+        const twitterUrl = twitterEl ? twitterEl.value.trim() : "";
+
+        const newSettings = { siteTitle, githubUrl, twitterUrl };
 
         await StorageService.saveSettings(newSettings);
         siteSettings = StorageService.getSettings();
         showToast("Site settings saved successfully!", "success");
+      } catch (err) {
+        console.error("Settings save error:", err);
+        showToast("Failed to save settings.", "error");
       } finally {
         setButtonLoading(submitBtn, false);
       }

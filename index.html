@@ -5,8 +5,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="siteTitle">Xnovaa.ai — Discover Every AI Tool in One Place</title>
-  <meta name="description" id="siteDescription"
-    content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
+  <meta name="description" id="siteDescription" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
+  <link rel="canonical" href="https://xnovaa.ai/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://xnovaa.ai/">
+  <meta property="og:title" content="Xnovaa.ai — Discover Every AI Tool in One Place">
+  <meta property="og:description" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
+  <meta property="og:site_name" content="Xnovaa.ai">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://xnovaa.ai/">
+  <meta name="twitter:title" content="Xnovaa.ai — Discover Every AI Tool in One Place">
+  <meta name="twitter:description" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Xnovaa.ai",
+    "url": "https://xnovaa.ai/",
+    "description": "Discover Every AI Tool in One Place. Browse, search, and launch curated AI tools.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://xnovaa.ai/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 
@@ -59,9 +89,11 @@
         aria-label="Retry database connection">Retry</button>
     </div>
 
+    <!-- Hidden Collections Container for app.js compatibility -->
+    <div id="collectionsWrap" style="display:none;"></div>
+
     <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-badge">✨ AI Tools Directory</div>
       <h1 id="heroHeadline">Discover Every AI Tool in One Place.</h1>
       <p id="heroSubheadline">Browse hundreds of curated AI tools across every category. Search, compare and launch
         instantly.</p>
@@ -89,16 +121,46 @@
       </div>
     </section>
 
-    <!-- Featured Collections Section -->
-    <section aria-label="Featured Collections">
-      <div class="section-header">
-        <h2 class="section-title">Explore Collections</h2>
-      </div>
-      <div class="collections-wrap" id="collectionsWrap"></div>
+    <!-- 1. HERO TOOL / FEATURED SHOWCASE (loads homepage_position='hero') -->
+    <section class="featured-showcase" aria-label="Featured Hero Tool of the Week" style="display:none;">
+      <div class="showcase-card" id="heroToolCard"></div>
     </section>
 
-    <!-- Main Tools Directory Section -->
+    <!-- 2. SPONSOR SPOTLIGHT (loads homepage_position='sponsor') -->
+    <section class="sponsor-spotlight" aria-label="Sponsor Spotlight" style="display:none;">
+      <div class="sponsor-card" id="sponsorToolCard"></div>
+    </section>
+
+    <!-- 3. FEATURED SECTION (loads homepage_position='featured') -->
+    <section class="horizontal-section" aria-label="Featured AI Tools" style="display:none;">
+      <div class="section-header">
+        <h2 class="section-title">Featured Tools</h2>
+      </div>
+      <div class="horizontal-scroll-grid" id="featuredScrollGrid"></div>
+    </section>
+
+    <!-- 4. NEWLY ADDED (loads status='published' ORDER BY created_at DESC LIMIT 4) -->
+    <section class="horizontal-section" aria-label="Newly Added AI Tools" style="display:none;">
+      <div class="section-header">
+        <h2 class="section-title">Newly Added AI Tools</h2>
+      </div>
+      <div class="horizontal-scroll-grid" id="newlyAddedGrid"></div>
+    </section>
+
+    <!-- 5. BROWSE BY CATEGORY (loads from Supabase categories table) -->
+    <section aria-label="Browse AI Tools by Category" style="margin-bottom:48px; display:none;">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Category</h2>
+      </div>
+      <div class="category-cards-grid" id="categoryCardsGrid"></div>
+    </section>
+
+    <!-- 6. LATEST TOOLS DIRECTORY (loads status='published') -->
     <main>
+      <div class="section-header">
+        <h2 class="section-title">All AI Directory Tools</h2>
+      </div>
+
       <!-- Segmented Categories Filter -->
       <div class="segmented-wrap">
         <div class="segmented" id="segmented" role="tablist" aria-label="Category Filters"></div>
@@ -122,14 +184,83 @@
         <button class="reset-btn" id="resetBtn" aria-label="Reset all search filters">Reset Filters</button>
       </div>
     </main>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="newsletter-section" aria-label="Newsletter Subscription">
+      <div class="newsletter-card">
+        <h2 class="newsletter-title">Stay Ahead in the AI Era</h2>
+        <p class="newsletter-desc">Join 25,000+ engineers, designers, and founders. Get a curated weekly digest of the best new AI tools and model breakthroughs.</p>
+        <form class="newsletter-form" onsubmit="event.preventDefault(); if (window.showToast) window.showToast('Thank you for subscribing to Xnovaa.ai Newsletter!', 'success'); this.reset();">
+          <input type="email" class="newsletter-input" placeholder="Enter your work email address..." required aria-label="Work Email Address">
+          <button type="submit" class="newsletter-btn">Subscribe</button>
+        </form>
+      </div>
+    </section>
+
   </div>
 
   <!-- Toast Container -->
   <div id="toastContainer" role="alert" aria-live="polite"></div>
 
+  <!-- ENHANCED FOOTER -->
   <footer>
     <div class="container">
-      &copy; 2026 Xnovaa.ai • Crafted for AI enthusiasts worldwide.
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="brand" aria-label="Xnovaa.ai Homepage">
+            <div class="brand-dot"></div>
+            Xnovaa<span>.ai</span>
+          </a>
+          <p class="footer-desc">Discover, compare, and launch the world's best AI tools and machine learning software.</p>
+
+          <div style="margin-top:20px; background:rgba(255,255,255,0.03); border:1px solid var(--border-hover); border-radius:14px; padding:18px; max-width:320px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+            <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              <span>🤝</span> Partnership & Sponsorship
+            </div>
+            <p style="margin:0 0 14px; font-size:12.5px; color:var(--text-secondary); line-height:1.45;">
+              Want to feature your AI tool, place a sponsor spotlight, or partner with Xnovaa.ai?
+            </p>
+            <a href="mailto:xnovaav@gmail.com?subject=Partnership%20Inquiry%20-%20Xnovaa.ai" class="showcase-btn" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:12px; border-radius:999px; background:var(--text); color:var(--bg); font-weight:700; text-decoration:none; transition:opacity 0.2s ease-out;">
+              Contact for Collaboration →
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="event.preventDefault(); document.getElementById('grid')?.scrollIntoView({behavior:'smooth'});">AI Directory</a></li>
+            <li><a href="/admin/">Submit AI Tool</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Categories</div>
+          <ul class="footer-links" id="footerCategoryLinks"></ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="mailto:xnovaav@gmail.com?subject=Partnership%20Inquiry%20-%20Xnovaa.ai">Partnership & Sponsor</a></li>
+            <li><a href="mailto:xnovaav@gmail.com?subject=Contact%20Us%20-%20Xnovaa.ai">Contact Us</a></li>
+            <li><a href="/admin/">Admin Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Community</div>
+          <ul class="footer-links">
+            <li><a href="https://github.com/SYTE001" id="githubLink" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="https://x.com" id="twitterLink" target="_blank" rel="noopener">Twitter / X</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 Xnovaa.ai Inc. All rights reserved.</span>
+        <span>Crafted with precision for AI creators worldwide.</span>
+      </div>
     </div>
   </footer>
 

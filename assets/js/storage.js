@@ -9,7 +9,8 @@ const StorageService = {
   DEFAULT_SETTINGS: {
     siteTitle: "Xnovaa.ai — Discover Every AI Tool in One Place",
     siteDescription: "Browse hundreds of curated AI tools across every category. Search, explore, and launch instantly.",
-    githubUrl: "https://github.com"
+    githubUrl: "https://github.com/SYTE001",
+    twitterUrl: "https://x.com"
   },
 
   cachedSettings: null,
@@ -35,6 +36,7 @@ const StorageService = {
             siteTitle: data.site_title || this.DEFAULT_SETTINGS.siteTitle,
             siteDescription: data.site_description || this.DEFAULT_SETTINGS.siteDescription,
             githubUrl: data.github_url || this.DEFAULT_SETTINGS.githubUrl,
+            twitterUrl: data.twitter_url || this.DEFAULT_SETTINGS.twitterUrl,
             updatedAt: data.updated_at
           };
           this.cachedSettings = settings;
@@ -81,6 +83,7 @@ const StorageService = {
           site_title: updated.siteTitle,
           site_description: updated.siteDescription,
           github_url: updated.githubUrl,
+          twitter_url: updated.twitterUrl,
           updated_at: new Date().toISOString()
         };
 
