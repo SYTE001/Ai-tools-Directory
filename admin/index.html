@@ -10,7 +10,6 @@
 
 <body>
 
-  <!-- DB ERROR OVERLAY -->
   <div id="dbErrorOverlay"
     style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
     <div
@@ -24,7 +23,6 @@
     </div>
   </div>
 
-  <!-- LOGIN VIEW -->
   <div id="loginView" class="login-container">
     <div class="login-card">
       <div class="login-header">
@@ -55,10 +53,8 @@
     </div>
   </div>
 
-  <!-- DASHBOARD VIEW -->
   <div id="dashboardView" class="admin-wrapper" style="display: none;">
 
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <a href="../" class="sidebar-brand" aria-label="Xnovaa.ai Homepage">
         <div class="sidebar-brand-dot"></div>
@@ -127,10 +123,8 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="main-content">
 
-      <!-- 1. OVERVIEW SECTION -->
       <section class="view-section" id="overviewSection">
         <div class="page-header">
           <h1 class="page-title">Directory Overview</h1>
@@ -156,7 +150,6 @@
         </div>
       </section>
 
-      <!-- 2. AI TOOLS SECTION -->
       <section class="view-section" id="toolsSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">AI Tools Management</h1>
@@ -199,7 +192,6 @@
         </div>
       </section>
 
-      <!-- 3. CATEGORIES SECTION -->
       <section class="view-section" id="categoriesSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">Category Management</h1>
@@ -232,7 +224,6 @@
         </div>
       </section>
 
-      <!-- 4. FEATURED ORDER SECTION -->
       <section class="view-section" id="featuredSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">Featured Tools Manager</h1>
@@ -241,7 +232,6 @@
         <div id="featuredOrderList" style="max-width:600px;"></div>
       </section>
 
-      <!-- 5. SETTINGS SECTION -->
       <section class="view-section" id="settingsSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">Site Settings</h1>
@@ -265,7 +255,6 @@
         </div>
       </section>
 
-      <!-- 6. BACKUP SECTION -->
       <section class="view-section" id="backupSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">Data Backup & Restore</h1>
@@ -288,7 +277,6 @@
     </main>
   </div>
 
-  <!-- ADD/EDIT TOOL MODAL -->
   <div class="modal-overlay" id="toolModal" role="dialog" aria-modal="true" aria-labelledby="toolModalTitle">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -298,7 +286,6 @@
       <form id="toolForm">
         <div class="modal-body">
 
-          <!-- Row 1: Tool Name & Category -->
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label" for="toolNameInput">Tool Name *</label>
@@ -310,13 +297,11 @@
             </div>
           </div>
 
-          <!-- Row 2: Tagline / Description -->
           <div class="form-group">
             <label class="form-label" for="toolDescInput">Description / Tagline *</label>
             <textarea id="toolDescInput" class="form-textarea" rows="3" required placeholder="Generate & refactor code from natural language prompts..."></textarea>
           </div>
 
-          <!-- Row 3: Website URL & Accent Color -->
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label" for="toolUrlInput">Website URL *</label>
@@ -331,7 +316,6 @@
             </div>
           </div>
 
-          <!-- Row 4: Status & Homepage Position -->
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label" for="toolStatusSelect">Publication Status *</label>
@@ -352,13 +336,11 @@
             </div>
           </div>
 
-          <!-- Row 5: Logo Upload -->
           <div class="form-group">
             <label class="form-label" for="toolLogoInput">Logo Upload (PNG, SVG, WEBP)</label>
             <input type="file" id="toolLogoInput" class="form-input file-input" accept=".png,.svg,.webp,.jpg">
           </div>
 
-          <!-- Row 6: Toggles -->
           <div class="toggle-wrap">
             <input type="checkbox" id="toolNewReleaseToggle">
             <label for="toolNewReleaseToggle">Show in Newly Added section</label>
@@ -378,7 +360,6 @@
     </div>
   </div>
 
-  <!-- DELETE CONFIRMATION MODAL -->
   <div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
     <div class="modal" style="max-width:420px;">
       <div class="modal-header">
@@ -394,7 +375,6 @@
     </div>
   </div>
 
-  <!-- EDIT CATEGORY MODAL -->
   <div class="modal-overlay" id="categoryEditModal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
     <div class="modal" style="max-width:440px;">
       <div class="modal-header">

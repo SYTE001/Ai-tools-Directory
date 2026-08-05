@@ -1,6 +1,3 @@
-/**
- * Accessible Toast Notification System for directory.ai
- */
 (function(window) {
   function createToastContainer() {
     let container = document.getElementById("toastContainer");

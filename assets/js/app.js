@@ -1,7 +1,3 @@
-/**
- * Public Website Application Controller — directory.ai / Xnovaa.ai
- * Data-driven architecture powered by Supabase.
- */
 (async function PublicApp() {
   let tools = [];
   let categories = [];
@@ -9,7 +5,6 @@
   let searchQuery = "";
   let siteSettings = {};
 
-  // Infinite Scroll State
   let visibleCount = 24;
   let isLoadingMore = false;
   let gridSentinelObserver = null;
@@ -25,7 +20,6 @@
   const dbRetryBtn = document.getElementById("dbRetryBtn");
   const githubLink = document.getElementById("githubLink");
 
-  // Reusable Helper Functions for status & homepage_position filtering
   function getPublishedTools(toolList = tools) {
     return (toolList || []).filter(t => !t.status || t.status === 'published');
   }
@@ -52,7 +46,6 @@
       .slice(0, 4);
   }
 
-  // Security Sanitization Helpers
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -72,7 +65,6 @@
     return '#';
   }
 
-  // LAZY LOGO LOAD HELPERS (IntersectionObserver + loading="lazy" decoding="async")
   function renderToolLogo(tool, options = {}) {
     const width = options.width || 42;
     const height = options.height || 42;
@@ -128,7 +120,6 @@
 
       lazyImages.forEach(img => logoObserver.observe(img));
     } else {
-      // Graceful fallback for unsupported browsers
       lazyImages.forEach(img => {
         if (img.dataset.src) {
           img.src = img.dataset.src;
@@ -139,11 +130,9 @@
     }
   }
 
-  // 1. SINGLE DATA FETCH FOR HOMEPAGE
   async function fetchHomepageData() {
     renderSkeletons();
 
-    // Fetch site settings
     if (typeof StorageService !== "undefined") {
       try {
         siteSettings = await StorageService.fetchSettings();
@@ -167,7 +156,6 @@
       }
     }
 
-    // Default category fallback
     const defaultCats = [
       { id: "cat_all", name: "All", icon: "📚", color: "#4F8CFF" }
     ];
@@ -176,7 +164,6 @@
 
     if (typeof supabaseClient !== "undefined" && supabaseClient) {
       try {
-        // Fetch Categories
         const { data: catData, error: catError } = await supabaseClient
           .from("categories")
           .select("*")
@@ -193,7 +180,6 @@
           categories = defaultCats;
         }
 
-        // Fetch Tools (Minimal select optimization)
         const { data: toolsData, error: toolsError } = await supabaseClient
           .from("tools")
           .select("id, name, description, website, logo, category, category_id, homepage_position, featured, sponsored, accent_color, status, created_at, updated_at, categories:category_id(name, icon, color)");
@@ -219,7 +205,6 @@
             };
           });
 
-          // Store only published tools for public homepage
           tools = getPublishedTools(rawTools);
           fetchSuccess = true;
         }
@@ -260,7 +245,6 @@
     `).join("");
   }
 
-  // 2. HERO TOOL RENDERER (homepage_position = 'hero', status = 'published')
   function renderHero() {
     const heroCard = document.getElementById("heroToolCard");
     if (!heroCard) return;
@@ -291,7 +275,6 @@
     observeLazyLogos(heroCard);
   }
 
-  // 3. SPONSOR SPOTLIGHT RENDERER (homepage_position = 'sponsor', status = 'published')
   function renderSponsor() {
     const sponsorCard = document.getElementById("sponsorToolCard");
     if (!sponsorCard) return;
@@ -325,7 +308,6 @@
     observeLazyLogos(sponsorCard);
   }
 
-  // 4. FEATURED SECTION RENDERER (homepage_position = 'featured', status = 'published', max 8)
   function renderFeatured() {
     const featuredGrid = document.getElementById("featuredScrollGrid") || 
                          document.querySelector('[aria-label="Featured AI Tools"] .horizontal-scroll-grid');
@@ -357,7 +339,6 @@
     observeLazyLogos(featuredGrid);
   }
 
-  // 5. NEWLY ADDED RENDERER (status = 'published', ORDER BY created_at DESC, limit 4)
   function renderNewest() {
     const newlyAddedGrid = document.getElementById("newlyAddedGrid") || 
                            document.querySelector('[aria-label="Newly Added AI Tools"] .horizontal-scroll-grid');
@@ -390,7 +371,6 @@
     observeLazyLogos(newlyAddedGrid);
   }
 
-  // 6. BROWSE BY CATEGORY RENDERER (Supabase categories source of truth, count published tools)
   function renderCategories() {
     const categoryGrid = document.getElementById("categoryCardsGrid") || document.querySelector(".category-cards-grid");
     if (!categoryGrid) return;
@@ -398,7 +378,6 @@
     const parentSection = categoryGrid.closest("section");
     const publishedTools = getPublishedTools(tools);
 
-    // Count published tools per category name & ID
     const categoryCounts = {};
     publishedTools.forEach(t => {
       const catName = t.category || "Uncategorized";
@@ -408,7 +387,6 @@
       }
     });
 
-    // Pure Source of Truth: Filter categories from categories table with >0 published tools
     let activeCategories = categories.filter(cat => {
       if (cat.name === "All") return false;
       const count = categoryCounts[cat.name] || categoryCounts[cat.id] || 0;
@@ -456,7 +434,6 @@
     });
   }
 
-  // 7. LIVE STATS RENDERER (fetches directly from public.directory_stats view)
   async function renderStats() {
     const toolCountEl = document.getElementById("toolCount");
     const categoryCountEl = document.getElementById("categoryCount");
@@ -503,7 +480,6 @@
       return;
     }
 
-    // Fallback if directory_stats view is unavailable
     const publishedTools = getPublishedTools(tools);
     const totalTools = publishedTools.length;
     const activeCategoryCount = categories.filter(c => c.name !== "All").length;
@@ -515,14 +491,12 @@
     if (lastUpdatedCountEl) lastUpdatedCountEl.textContent = totalTools > 0 ? "Live" : "Active";
   }
 
-  // 8. DYNAMIC FOOTER CATEGORIES RENDERER (max 6 categories with >0 published tools)
   function renderFooterCategories() {
     const footerCatList = document.getElementById("footerCategoryLinks");
     if (!footerCatList) return;
 
     const publishedTools = getPublishedTools(tools);
 
-    // Count published tools per category
     const categoryCounts = {};
     publishedTools.forEach(t => {
       const catName = t.category || "Uncategorized";
@@ -532,7 +506,6 @@
       }
     });
 
-    // Filter categories with >0 published tools, limit to max 6
     let activeCategories = categories.filter(cat => {
       if (cat.name === "All") return false;
       const count = categoryCounts[cat.name] || categoryCounts[cat.id] || 0;
@@ -566,7 +539,6 @@
     });
   }
 
-  // INFINITE SCROLL SENTINEL & OBSERVER
   function ensureGridSentinel() {
     if (!gridEl) return null;
     let sentinel = document.getElementById("gridSentinel");
@@ -620,7 +592,6 @@
     }
   }
 
-  // MAIN DIRECTORY GRID RENDERER (Infinite Scroll Batching: 24 items per batch)
   function renderSegmented() {
     if (!segmentedEl) return;
     segmentedEl.innerHTML = categories.map(cat => {
@@ -721,7 +692,6 @@
     setupInfiniteScroll(filtered.length);
   }
 
-  // Event Listeners for Search & Filter
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
       searchQuery = e.target.value.toLowerCase().trim();
@@ -756,7 +726,6 @@
     });
   }
 
-  // NEWSLETTER SUBSCRIPTION HANDLER (Supabase integration + Duplicate Prevention + Toast Alerts)
   const newsletterForm = document.querySelector(".newsletter-form");
   if (newsletterForm) {
     newsletterForm.removeAttribute("onsubmit");
@@ -778,7 +747,6 @@
 
       try {
         if (typeof supabaseClient !== "undefined" && supabaseClient) {
-          // Check if email already exists in newsletter_subscribers table
           const { data: existing, error: checkError } = await supabaseClient
             .from("newsletter_subscribers")
             .select("id, email")
@@ -789,7 +757,6 @@
             return;
           }
 
-          // Insert new subscriber into Supabase
           const { error: insertError } = await supabaseClient
             .from("newsletter_subscribers")
             .insert([{ email: email, created_at: new Date().toISOString() }]);
@@ -831,7 +798,6 @@
     }
   }
 
-  // Retry Handler
   if (dbRetryBtn) {
     dbRetryBtn.addEventListener("click", async () => {
       setButtonLoading(dbRetryBtn, true, "Retrying...");
@@ -856,7 +822,6 @@
     });
   }
 
-  // Expose Modular Functions on Window for Global & Backward Compatibility Access
   window.fetchHomepageData = fetchHomepageData;
   window.renderHero = renderHero;
   window.renderSponsor = renderSponsor;
@@ -875,7 +840,6 @@
   window.renderCategoryCards = renderCategories;
   window.renderNewlyAddedTools = renderNewest;
 
-  // INITIALIZE HOMEPAGE DATA-DRIVEN ARCHITECTURE
   const ok = await fetchHomepageData();
   visibleCount = 24;
   await renderStats();

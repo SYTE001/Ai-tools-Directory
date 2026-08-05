@@ -1,13 +1,9 @@
-/**
- * Admin Dashboard Controller — directory.ai Production Controller
- */
 (async function AdminApp() {
 
   let adminTools = [];
   let adminCategories = [];
   let siteSettings = {};
 
-  // Elements
   const loginView = document.getElementById("loginView");
   const dashboardView = document.getElementById("dashboardView");
   const loginForm = document.getElementById("loginForm");
@@ -16,11 +12,9 @@
   const dbRetryBtn = document.getElementById("dbRetryBtn");
   const dbErrorOverlay = document.getElementById("dbErrorOverlay");
 
-  // Navigation Items
   const navItems = document.querySelectorAll(".nav-item[data-view]");
   const viewSections = document.querySelectorAll(".view-section");
 
-  // State Management
   let toolSearchQuery = "";
   let toolCategoryFilter = "All";
   let toolSortOrder = "Newest";
@@ -28,7 +22,6 @@
   let deletingToolId = null;
   let editingCategoryId = null;
 
-  // Button Loading State & Disabling Helper
   function setButtonLoading(btn, isLoading, loadingText = "Processing...") {
     if (!btn) return;
     if (isLoading) {
@@ -44,7 +37,6 @@
     }
   }
 
-  // Focus Trapping Accessibility Helper
   let lastActiveElement = null;
 
   function trapFocus(modalEl) {
@@ -106,14 +98,12 @@
     });
   }
 
-  // Handle Global Escape Key for Modals
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeAllModals();
     }
   });
 
-  // Table Skeleton Loader
   function renderTableSkeletons() {
     const tbody = document.getElementById("toolsTableBody");
     if (!tbody) return;
@@ -130,7 +120,6 @@
     `).join("");
   }
 
-  // Load tools and categories from Supabase with detailed query error reporting
   async function loadAdminData() {
     renderTableSkeletons();
 
@@ -172,7 +161,6 @@
         if (dbErrorOverlay) dbErrorOverlay.style.display = "none";
         adminCategories = categoryData || [];
 
-        // Process tools mapping category_id relationships & new status/homepage_position fields
         adminTools = (toolsData || []).map(t => {
           let categoryName = t.category;
           if (t.categories && t.categories.name) {
@@ -224,7 +212,6 @@
     });
   }
 
-  // ===== Supabase Auth Guard =====
   async function checkAuth() {
     const isAuth = await AuthService.isAuthenticated();
     if (isAuth) {
@@ -239,7 +226,6 @@
     }
   }
 
-  // Subscribe to Supabase Auth state changes automatically
   AuthService.onAuthStateChange(async (event, session) => {
     if (session) {
       loginView.style.display = "none";
@@ -253,7 +239,6 @@
     }
   });
 
-  // Handle Login Submission via Supabase Auth
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -291,7 +276,6 @@
     });
   }
 
-  // ===== Navigation Switcher =====
   navItems.forEach(item => {
     item.addEventListener("click", (e) => {
       e.preventDefault();
@@ -320,7 +304,6 @@
     ensureModalFields();
   }
 
-  // ===== 1. OVERVIEW STATS =====
   function renderOverviewStats() {
     const featuredCount = adminTools.filter(t => t.featured || t.sponsored || t.homepage_position === 'featured' || t.homepage_position === 'hero' || t.homepage_position === 'sponsor').length;
     const newestTool = adminTools.length > 0 ? adminTools[0].name : "None";
@@ -331,7 +314,6 @@
     document.getElementById("statNewestTool").textContent = newestTool;
   }
 
-  // ===== 2. TOOLS MANAGEMENT =====
   function renderCategoryOptions() {
     const selectEl = document.getElementById("toolCategorySelect");
     const filterSelectEl = document.getElementById("filterCategorySelect");
@@ -346,7 +328,6 @@
     }
   }
 
-  // XSS & Security Sanitization Helpers
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -366,7 +347,6 @@
     return '#';
   }
 
-  // Inject Status and Homepage Position form controls dynamically if absent in static HTML
   function ensureModalFields() {
     const modalBody = document.querySelector("#toolForm .modal-body");
     if (!modalBody) return;
@@ -411,7 +391,6 @@
     }
   }
 
-  // Field Validation Helper
   function validateToolFields(status, homepagePosition, isNewRelease = false) {
     const validStatuses = ["draft", "published", "archived"];
     const validPositions = ["none", "featured", "hero", "sponsor"];
@@ -443,7 +422,6 @@
       return matchesSearch && matchesCategory;
     });
 
-    // Sorting
     filtered.sort((a, b) => {
       if (toolSortOrder === "A-Z") return a.name.localeCompare(b.name);
       if (toolSortOrder === "Z-A") return b.name.localeCompare(a.name);
@@ -540,7 +518,6 @@
     });
   }
 
-  // Filter & Search Controls
   const adminSearchInput = document.getElementById("adminSearchInput");
   if (adminSearchInput) {
     adminSearchInput.addEventListener("input", (e) => {
@@ -565,7 +542,6 @@
     });
   }
 
-  // Modal Controls
   const toolModal = document.getElementById("toolModal");
   const openAddToolModalBtn = document.getElementById("openAddToolModal");
   const closeToolModalBtn = document.getElementById("closeToolModal");
@@ -634,7 +610,6 @@
     openModal(toolModal);
   }
 
-  // Duplicate Tool with Optimistic Update
   async function duplicateTool(id) {
     const existing = adminTools.find(t => String(t.id) === String(id));
     if (!existing) return;
@@ -659,7 +634,6 @@
       created_at: new Date().toISOString()
     };
 
-    // Optimistic Local Update
     adminTools.unshift(copyPayload);
     renderToolsTable();
     renderOverviewStats();
@@ -694,7 +668,6 @@
     showToast("Tool duplicated successfully!", "success");
   }
 
-  // Tool Form Submission
   if (toolForm) {
     toolForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -859,7 +832,6 @@
     });
   }
 
-  // Delete Tool Confirmation Modal
   const deleteModal = document.getElementById("deleteModal");
   const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
   const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
@@ -919,7 +891,6 @@
     });
   }
 
-  // ===== 3. CATEGORIES MANAGEMENT =====
   const categoryEditModal = document.getElementById("categoryEditModal");
   const closeCategoryEditModalBtn = document.getElementById("closeCategoryEditModal");
   const cancelCategoryEditBtn = document.getElementById("cancelCategoryEditBtn");
@@ -1121,7 +1092,6 @@
     showToast(`Category "${targetCat.name}" deleted!`, "success");
   }
 
-  // ===== 4. FEATURED DRAG & DROP ORDERING =====
   let previousOrderSnapshot = null;
 
   function renderFeaturedOrder(focusedId = null) {
@@ -1318,7 +1288,6 @@
     previousOrderSnapshot = null;
   }
 
-  // ===== 5. SITE SETTINGS & BACKUP =====
   async function loadSettings() {
     siteSettings = await StorageService.fetchSettings();
   }
@@ -1362,7 +1331,6 @@
     });
   }
 
-  // Backup Export & Import with Button Loading States
   const exportBtn = document.getElementById("exportBackupBtn");
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {

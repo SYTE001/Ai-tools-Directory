@@ -1,6 +1,3 @@
-/**
- * Theme Manager Module
- */
 const ThemeManager = {
   STORAGE_KEY: "directory_theme",
 

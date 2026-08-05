@@ -8,20 +8,17 @@
   <meta name="description" id="siteDescription" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
   <link rel="canonical" href="https://xnovaa.ai/">
 
-  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://xnovaa.ai/">
   <meta property="og:title" content="Xnovaa.ai — Discover Every AI Tool in One Place">
   <meta property="og:description" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
   <meta property="og:site_name" content="Xnovaa.ai">
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://xnovaa.ai/">
   <meta name="twitter:title" content="Xnovaa.ai — Discover Every AI Tool in One Place">
   <meta name="twitter:description" content="Browse hundreds of curated AI tools across every category. Search, compare and launch instantly.">
 
-  <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -79,7 +76,6 @@
   </header>
 
   <div class="container">
-    <!-- DB Error Banner -->
     <div id="dbErrorBanner"
       style="display:none; margin-top:20px; background:#FF3B30; color:#fff; padding:12px 20px; border-radius:12px; align-items:center; justify-content:space-between; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.3);"
       role="alert">
@@ -89,17 +85,14 @@
         aria-label="Retry database connection">Retry</button>
     </div>
 
-    <!-- Hidden Collections Container for app.js compatibility -->
     <div id="collectionsWrap" style="display:none;"></div>
 
-    <!-- Hero Section -->
     <section class="hero">
       <h1 id="heroHeadline">Discover Every AI Tool in One Place.</h1>
       <p id="heroSubheadline">Browse hundreds of curated AI tools across every category. Search, compare and launch
         instantly.</p>
     </section>
 
-    <!-- Live Stats Section -->
     <section aria-label="Directory Live Statistics">
       <div class="stats-grid">
         <div class="stat-card">
@@ -121,17 +114,14 @@
       </div>
     </section>
 
-    <!-- 1. HERO TOOL / FEATURED SHOWCASE (loads homepage_position='hero') -->
     <section class="featured-showcase" aria-label="Featured Hero Tool of the Week" style="display:none;">
       <div class="showcase-card" id="heroToolCard"></div>
     </section>
 
-    <!-- 2. SPONSOR SPOTLIGHT (loads homepage_position='sponsor') -->
     <section class="sponsor-spotlight" aria-label="Sponsor Spotlight" style="display:none;">
       <div class="sponsor-card" id="sponsorToolCard"></div>
     </section>
 
-    <!-- 3. FEATURED SECTION (loads homepage_position='featured') -->
     <section class="horizontal-section" aria-label="Featured AI Tools" style="display:none;">
       <div class="section-header">
         <h2 class="section-title">Featured Tools</h2>
@@ -139,7 +129,6 @@
       <div class="horizontal-scroll-grid" id="featuredScrollGrid"></div>
     </section>
 
-    <!-- 4. NEWLY ADDED (loads status='published' ORDER BY created_at DESC LIMIT 4) -->
     <section class="horizontal-section" aria-label="Newly Added AI Tools" style="display:none;">
       <div class="section-header">
         <h2 class="section-title">Newly Added AI Tools</h2>
@@ -147,7 +136,6 @@
       <div class="horizontal-scroll-grid" id="newlyAddedGrid"></div>
     </section>
 
-    <!-- 5. BROWSE BY CATEGORY (loads from Supabase categories table) -->
     <section aria-label="Browse AI Tools by Category" style="margin-bottom:48px; display:none;">
       <div class="section-header">
         <h2 class="section-title">Browse by Category</h2>
@@ -155,21 +143,17 @@
       <div class="category-cards-grid" id="categoryCardsGrid"></div>
     </section>
 
-    <!-- 6. LATEST TOOLS DIRECTORY (loads status='published') -->
     <main>
       <div class="section-header">
         <h2 class="section-title">All AI Directory Tools</h2>
       </div>
 
-      <!-- Segmented Categories Filter -->
       <div class="segmented-wrap">
         <div class="segmented" id="segmented" role="tablist" aria-label="Category Filters"></div>
       </div>
 
-      <!-- Responsive Tools Grid -->
       <div class="grid" id="grid" aria-label="AI Tools List"></div>
 
-      <!-- Empty State -->
       <div class="empty-state" id="emptyState" role="region" aria-label="No results found">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -185,7 +169,6 @@
       </div>
     </main>
 
-    <!-- NEWSLETTER SECTION -->
     <section class="newsletter-section" aria-label="Newsletter Subscription">
       <div class="newsletter-card">
         <h2 class="newsletter-title">Stay Ahead in the AI Era</h2>
@@ -199,10 +182,8 @@
 
   </div>
 
-  <!-- Toast Container -->
   <div id="toastContainer" role="alert" aria-live="polite"></div>
 
-  <!-- ENHANCED FOOTER -->
   <footer>
     <div class="container">
       <div class="footer-grid">

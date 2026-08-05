@@ -1,6 +1,3 @@
-/**
- * Storage Service — Supabase Settings & Local Cache Manager
- */
 const StorageService = {
   KEYS: {
     SETTINGS: "directory_settings_v1"

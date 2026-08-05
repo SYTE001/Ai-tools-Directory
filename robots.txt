@@ -1,4 +1,3 @@
-# robots.txt for Xnovaa.ai AI Tools Directory
 User-agent: *
 Allow: /
 Disallow: /admin/

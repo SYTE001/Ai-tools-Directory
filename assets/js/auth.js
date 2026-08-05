@@ -1,8 +1,4 @@
-/**
- * Security & Auth Manager for Admin Dashboard — Pure Supabase Auth SDK Wrapper
- */
 const AuthService = {
-  // Get active session from Supabase Auth SDK
   async getSession() {
     if (typeof supabaseClient === "undefined" || !supabaseClient || !supabaseClient.auth) {
       return null;
@@ -30,13 +26,11 @@ const AuthService = {
     }
   },
 
-  // Check if session is authenticated
   async isAuthenticated() {
     const session = await this.getSession();
     return !!session;
   },
 
-  // Sign in via Supabase Auth signInWithPassword()
   async login(email, password) {
     if (!email || !password) {
       return { success: false, message: "Please enter email address and password." };
@@ -73,7 +67,6 @@ const AuthService = {
     }
   },
 
-  // Sign out via Supabase Auth signOut()
   async logout() {
     if (typeof supabaseClient !== "undefined" && supabaseClient && supabaseClient.auth) {
       try {
@@ -97,7 +90,6 @@ const AuthService = {
     }
   },
 
-  // Listen to Supabase Auth state changes
   onAuthStateChange(callback) {
     if (typeof supabaseClient !== "undefined" && supabaseClient && supabaseClient.auth) {
       return supabaseClient.auth.onAuthStateChange((event, session) => {
