@@ -6,8 +6,6 @@
   let siteSettings = {};
 
   let visibleCount = 24;
-  let isLoadingMore = false;
-  let gridSentinelObserver = null;
 
   const segmentedEl = document.getElementById("segmented");
   const gridEl = document.getElementById("grid");
@@ -371,6 +369,33 @@
     observeLazyLogos(newlyAddedGrid);
   }
 
+  const CATEGORY_ICONS = {
+    "All": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>`,
+    "3D": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+    "Audio": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>`,
+    "Automation": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
+    "Chat": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    "Coding": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    "Design": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>`,
+    "Education": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+    "Experimental": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31L4.75 18.5A2 2 0 0 0 6.46 21.5h11.08a2 2 0 0 0 1.71-3L14 9.31V2"/><line x1="8.5" y1="2" x2="15.5" y2="2"/></svg>`,
+    "Image": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    "Image Generation": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`,
+    "Marketing": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`,
+    "Productivity": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    "Research": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    "Text Generation": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    "Writing": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    "Video": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20"/><path d="M6 4l2 4"/><path d="M12 4l2 4"/><path d="M18 4l2 4"/></svg>`,
+    "Arrow Right": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`
+  };
+
+  function getCategoryIconSvg(categoryName) {
+    if (!categoryName) return CATEGORY_ICONS["All"];
+    const name = String(categoryName).trim();
+    return CATEGORY_ICONS[name] || CATEGORY_ICONS["All"];
+  }
+
   function renderCategories() {
     const categoryGrid = document.getElementById("categoryCardsGrid") || document.querySelector(".category-cards-grid");
     if (!categoryGrid) return;
@@ -404,12 +429,12 @@
       const count = categoryCounts[cat.name] || categoryCounts[cat.id] || 0;
       const countLabel = count === 1 ? "1 Tool" : `${count} Tools`;
       const catNameEsc = escapeHtml(cat.name);
-      const iconEsc = escapeHtml(cat.icon || "✨");
+      const iconSvg = getCategoryIconSvg(cat.name);
 
       return `
         <a href="#" class="cat-card" data-cat="${catNameEsc}">
           <div class="cat-icon-wrap">
-            <span class="cat-icon">${iconEsc}</span>
+            <span class="cat-icon">${iconSvg}</span>
             <span class="cat-title">${catNameEsc}</span>
           </div>
           <span class="cat-count">${countLabel}</span>
@@ -539,69 +564,138 @@
     });
   }
 
-  function ensureGridSentinel() {
+  function ensureLoadMoreButton() {
     if (!gridEl) return null;
-    let sentinel = document.getElementById("gridSentinel");
-    if (!sentinel) {
-      sentinel = document.createElement("div");
-      sentinel.id = "gridSentinel";
-      sentinel.style.cssText = "grid-column: 1 / -1; margin-top: 32px; padding: 20px 0; text-align: center; display: none;";
-      sentinel.innerHTML = `
-        <div style="display:inline-flex; align-items:center; justify-content:center; gap:10px; color:var(--text-secondary); font-size:13.5px; font-weight:600; background:var(--surface); border:1px solid var(--border); padding:10px 24px; border-radius:999px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-          <span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:var(--text-muted); border-top-color:var(--text);"></span>
-          Loading more AI tools...
+    let wrapper = document.getElementById("loadMoreWrapper");
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = "loadMoreWrapper";
+      wrapper.style.cssText = "margin-top: 32px; text-align: center; display: none;";
+
+      wrapper.innerHTML = `
+        <div id="loadMoreCount" style="font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 14px; letter-spacing: -0.01em;">
+          Showing 0 of 0 Tools
+        </div>
+        <button id="loadMoreBtn" type="button" class="load-more-btn">
+          Load More Tools
+        </button>
+      `;
+
+      const btn = wrapper.querySelector("#loadMoreBtn");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          visibleCount += 24;
+          renderGrid();
+        });
+      }
+
+      if (gridEl.parentNode) {
+        gridEl.parentNode.insertBefore(wrapper, gridEl.nextSibling);
+      }
+    }
+    return wrapper;
+  }
+
+  function updateLoadMoreButton(filteredTotalLength) {
+    const wrapper = ensureLoadMoreButton();
+    if (!wrapper) return;
+    const countEl = document.getElementById("loadMoreCount");
+    const visibleNumber = Math.min(visibleCount, filteredTotalLength);
+    if (countEl) {
+      countEl.textContent = `Showing ${visibleNumber} of ${filteredTotalLength} Tools`;
+    }
+    if (visibleCount >= filteredTotalLength) {
+      wrapper.style.display = "none";
+    } else {
+      wrapper.style.display = "block";
+    }
+  }
+
+  function openCategoryBottomSheet() {
+    const overlay = document.getElementById("categoryBottomSheet");
+    const container = document.getElementById("bottomSheetCatList");
+    if (!overlay || !container) return;
+
+    const publishedTools = getPublishedTools(tools);
+    const categoryCounts = {};
+    publishedTools.forEach(t => {
+      const catName = t.category || "Uncategorized";
+      categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
+      if (t.category_id) {
+        categoryCounts[t.category_id] = (categoryCounts[t.category_id] || 0) + 1;
+      }
+    });
+
+    container.innerHTML = categories.map(cat => {
+      const isActive = cat.name === activeCategory;
+      const catNameEsc = escapeHtml(cat.name);
+      const iconSvg = getCategoryIconSvg(cat.name);
+      const count = cat.name === "All" ? publishedTools.length : (categoryCounts[cat.name] || categoryCounts[cat.id] || 0);
+
+      return `
+        <div class="bottom-sheet-cat-item ${isActive ? 'active' : ''}" data-cat="${catNameEsc}">
+          <span class="chip-icon">${iconSvg}</span>
+          <div style="flex:1; min-width:0;">
+            <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${catNameEsc}</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:400;">${count} Tools</div>
+          </div>
         </div>
       `;
-      if (gridEl.parentNode) {
-        gridEl.parentNode.insertBefore(sentinel, gridEl.nextSibling);
-      }
-    }
-    return sentinel;
+    }).join("");
+
+    container.querySelectorAll(".bottom-sheet-cat-item").forEach(item => {
+      item.addEventListener("click", () => {
+        activeCategory = item.dataset.cat;
+        visibleCount = 24;
+        renderSegmented();
+        renderGrid();
+        closeCategoryBottomSheet();
+      });
+    });
+
+    overlay.classList.add("active");
   }
 
-  function setupInfiniteScroll(filteredTotalLength) {
-    const sentinel = ensureGridSentinel();
-    if (!sentinel) return;
-
-    if (visibleCount >= filteredTotalLength) {
-      sentinel.style.display = "none";
-      return;
-    }
-
-    sentinel.style.display = "block";
-
-    if ("IntersectionObserver" in window) {
-      if (gridSentinelObserver) {
-        gridSentinelObserver.disconnect();
-      }
-
-      gridSentinelObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !isLoadingMore && visibleCount < filteredTotalLength) {
-            isLoadingMore = true;
-            setTimeout(() => {
-              visibleCount += 24;
-              renderGrid();
-              isLoadingMore = false;
-            }, 120);
-          }
-        });
-      }, { rootMargin: "250px 0px" });
-
-      gridSentinelObserver.observe(sentinel);
-    }
+  function closeCategoryBottomSheet() {
+    const overlay = document.getElementById("categoryBottomSheet");
+    if (overlay) overlay.classList.remove("active");
   }
+
+  const closeBottomSheetBtn = document.getElementById("closeBottomSheetBtn");
+  if (closeBottomSheetBtn) {
+    closeBottomSheetBtn.addEventListener("click", closeCategoryBottomSheet);
+  }
+
+  const categoryBottomSheetOverlay = document.getElementById("categoryBottomSheet");
+  if (categoryBottomSheetOverlay) {
+    categoryBottomSheetOverlay.addEventListener("click", (e) => {
+      if (e.target === categoryBottomSheetOverlay) {
+        closeCategoryBottomSheet();
+      }
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeCategoryBottomSheet();
+    }
+  });
 
   function renderSegmented() {
     if (!segmentedEl) return;
-    segmentedEl.innerHTML = categories.map(cat => {
+    
+    const chipsHtml = categories.map(cat => {
       const isActive = cat.name === activeCategory;
       const catNameEsc = escapeHtml(cat.name);
-      const catIconEsc = cat.icon ? escapeHtml(cat.icon) + ' ' : '';
-      return `<button class="${isActive ? 'active' : ''}" role="tab" aria-selected="${isActive ? 'true' : 'false'}" data-cat="${catNameEsc}">${catIconEsc}${catNameEsc}</button>`;
+      const iconSvg = getCategoryIconSvg(cat.name);
+      return `<button class="${isActive ? 'active' : ''}" role="tab" aria-selected="${isActive ? 'true' : 'false'}" data-cat="${catNameEsc}"><span class="chip-icon">${iconSvg}</span><span class="chip-text">${catNameEsc}</span></button>`;
     }).join("");
 
-    segmentedEl.querySelectorAll("button").forEach(btn => {
+    const viewAllChipHtml = `<button class="view-all-chip" id="viewAllCategoriesBtn" type="button"><span class="chip-text">View All</span><span class="chip-icon">${CATEGORY_ICONS["Arrow Right"]}</span></button>`;
+
+    segmentedEl.innerHTML = chipsHtml + viewAllChipHtml;
+
+    segmentedEl.querySelectorAll("button[data-cat]").forEach(btn => {
       btn.addEventListener("click", () => {
         activeCategory = btn.dataset.cat;
         visibleCount = 24;
@@ -609,6 +703,14 @@
         renderGrid();
       });
     });
+
+    const viewAllBtn = document.getElementById("viewAllCategoriesBtn");
+    if (viewAllBtn) {
+      viewAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openCategoryBottomSheet();
+      });
+    }
   }
 
   function renderCollections() {
@@ -616,7 +718,7 @@
     const catList = categories.filter(c => c.name !== "All");
     collectionsWrap.innerHTML = catList.map(cat => `
       <div class="collection-card" tabindex="0" role="button" aria-label="Browse ${escapeHtml(cat.name)} tools" data-cat="${escapeHtml(cat.name)}">
-        <span class="collection-icon">${escapeHtml(cat.icon || '✨')}</span>
+        <span class="chip-icon">${getCategoryIconSvg(cat.name)}</span>
         <span class="collection-name">${escapeHtml(cat.name)} Tools</span>
       </div>
     `).join("");
@@ -639,12 +741,11 @@
       return (a.order_index ?? 0) - (b.order_index ?? 0);
     });
 
-    const sentinel = document.getElementById("gridSentinel");
-
     if (filtered.length === 0) {
       gridEl.style.display = "none";
       if (emptyStateEl) emptyStateEl.style.display = "flex";
-      if (sentinel) sentinel.style.display = "none";
+      const wrapper = document.getElementById("loadMoreWrapper");
+      if (wrapper) wrapper.style.display = "none";
       return;
     }
 
@@ -689,7 +790,52 @@
     }).join("");
 
     observeLazyLogos(gridEl);
-    setupInfiniteScroll(filtered.length);
+    updateLoadMoreButton(filtered.length);
+  }
+
+  let scrollSearchTimeout = null;
+
+  function scrollToResultsIfNecessary() {
+    if (scrollSearchTimeout) {
+      clearTimeout(scrollSearchTimeout);
+      scrollSearchTimeout = null;
+    }
+
+    if (!searchQuery) return;
+
+    scrollSearchTimeout = setTimeout(() => {
+      const publishedTools = getPublishedTools(tools);
+      const hasMatches = publishedTools.some(t => {
+        const matchesCategory = activeCategory === "All" || t.category === activeCategory;
+        const matchesSearch = !searchQuery || 
+                              (t.name && t.name.toLowerCase().includes(searchQuery)) ||
+                              (t.description && t.description.toLowerCase().includes(searchQuery)) ||
+                              (t.category && t.category.toLowerCase().includes(searchQuery));
+        return matchesCategory && matchesSearch;
+      });
+
+      if (!hasMatches) return;
+
+      const mainHeader = document.querySelector("main .section-header") || gridEl;
+      if (!mainHeader) return;
+
+      const rect = mainHeader.getBoundingClientRect();
+      const headerOffset = 80;
+
+      if (rect.top >= headerOffset && rect.top <= window.innerHeight * 0.6) {
+        return;
+      }
+
+      if (rect.top < 0) {
+        return;
+      }
+
+      const targetY = window.pageYOffset + rect.top - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, targetY),
+        behavior: "smooth"
+      });
+    }, 200);
   }
 
   if (searchInput) {
@@ -700,11 +846,17 @@
         clearSearchBtn.style.display = searchQuery.length > 0 ? "flex" : "none";
       }
       renderGrid();
+      if (searchQuery.length > 0) {
+        scrollToResultsIfNecessary();
+      } else if (scrollSearchTimeout) {
+        clearTimeout(scrollSearchTimeout);
+      }
     });
   }
 
   if (clearSearchBtn) {
     clearSearchBtn.addEventListener("click", () => {
+      if (scrollSearchTimeout) clearTimeout(scrollSearchTimeout);
       if (searchInput) searchInput.value = "";
       searchQuery = "";
       visibleCount = 24;
@@ -716,6 +868,7 @@
 
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
+      if (scrollSearchTimeout) clearTimeout(scrollSearchTimeout);
       if (searchInput) searchInput.value = "";
       searchQuery = "";
       activeCategory = "All";
@@ -839,6 +992,8 @@
   window.getNewlyAddedTools = getNewlyAddedTools;
   window.renderCategoryCards = renderCategories;
   window.renderNewlyAddedTools = renderNewest;
+  window.openCategoryBottomSheet = openCategoryBottomSheet;
+  window.closeCategoryBottomSheet = closeCategoryBottomSheet;
 
   const ok = await fetchHomepageData();
   visibleCount = 24;

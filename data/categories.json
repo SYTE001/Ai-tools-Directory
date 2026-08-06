@@ -1,9 +1,9 @@
 [
-  { "id": "cat_all", "name": "All", "icon": "📚", "color": "#4F8CFF" },
-  { "id": "cat_coding", "name": "Coding", "icon": "💻", "color": "#007AFF" },
-  { "id": "cat_video", "name": "Video", "icon": "🎬", "color": "#FF3B30" },
-  { "id": "cat_image", "name": "Image", "icon": "🎨", "color": "#34C759" },
-  { "id": "cat_writing", "name": "Writing", "icon": "📈", "color": "#AF52DE" },
-  { "id": "cat_audio", "name": "Audio", "icon": "🎙️", "color": "#FF9500" },
-  { "id": "cat_chat", "name": "Chat", "icon": "🤖", "color": "#5856D6" }
+  { "id": "cat_all", "name": "All", "color": "#4F8CFF" },
+  { "id": "cat_coding", "name": "Coding", "color": "#007AFF" },
+  { "id": "cat_video", "name": "Video", "color": "#FF3B30" },
+  { "id": "cat_image", "name": "Image", "color": "#34C759" },
+  { "id": "cat_writing", "name": "Writing", "color": "#AF52DE" },
+  { "id": "cat_audio", "name": "Audio", "color": "#FF9500" },
+  { "id": "cat_chat", "name": "Chat", "color": "#5856D6" }
 ]
