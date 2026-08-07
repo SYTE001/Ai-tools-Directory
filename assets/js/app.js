@@ -134,12 +134,14 @@
     if (typeof StorageService !== "undefined") {
       try {
         siteSettings = await StorageService.fetchSettings();
-        const githubEl = document.getElementById("githubLink");
+        const githubEls = document.querySelectorAll("#githubLink, #footerGithubLink");
         const twitterEl = document.getElementById("twitterLink");
 
-        if (githubEl && siteSettings.githubUrl) {
-          githubEl.href = sanitizeUrl(siteSettings.githubUrl);
-          githubEl.title = `GitHub Repository (${escapeHtml(siteSettings.githubUrl)})`;
+        if (githubEls.length && siteSettings.githubUrl) {
+          githubEls.forEach(el => {
+            el.href = sanitizeUrl(siteSettings.githubUrl);
+            el.title = `GitHub Repository (${escapeHtml(siteSettings.githubUrl)})`;
+          });
         }
         if (twitterEl && siteSettings.twitterUrl) {
           twitterEl.href = sanitizeUrl(siteSettings.twitterUrl);
