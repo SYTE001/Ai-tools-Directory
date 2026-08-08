@@ -1331,6 +1331,197 @@
     });
   }
 
+  async function restoreDatasetFromJSON(jsonInput) {
+    const logPanel = document.getElementById("restoreLogPanel");
+    const logContent = document.getElementById("restoreLogContent");
+
+    let parsedPayload;
+    try {
+      parsedPayload = StorageService.parseAndValidateBackup(jsonInput);
+    } catch (err) {
+      showToast(err.message, "error");
+      if (logPanel && logContent) {
+        logPanel.style.display = "block";
+        logContent.innerHTML = `<span style="color:var(--admin-danger);">❌ Restore Error: ${err.message}</span>`;
+      }
+      return { success: false, message: err.message };
+    }
+
+    const { tools: jsonTools, categories: jsonCategories, settings: jsonSettings } = parsedPayload;
+
+    let restoredCategoriesCount = 0;
+    let updatedCategoriesCount = 0;
+    let restoredToolsCount = 0;
+    let updatedToolsCount = 0;
+    let settingsRestored = false;
+    const warnings = [];
+
+    // 1. Process Categories (Idempotent by id or name)
+    if (jsonCategories && jsonCategories.length > 0) {
+      for (const jsonCat of jsonCategories) {
+        if (!jsonCat || typeof jsonCat !== "object") continue;
+        const catName = jsonCat.name ? String(jsonCat.name).trim() : "";
+        if (!catName) continue;
+
+        let existing = adminCategories.find(c =>
+          (jsonCat.id && String(c.id) === String(jsonCat.id)) ||
+          (c.name && c.name.toLowerCase().trim() === catName.toLowerCase())
+        );
+
+        const catPayload = {
+          ...jsonCat,
+          name: catName,
+          icon: jsonCat.icon || jsonCat.emoji || (existing ? existing.icon : "📁"),
+          color: jsonCat.color || jsonCat.accent_color || (existing ? existing.color : "#4F8CFF")
+        };
+
+        if (existing) {
+          const catId = existing.id;
+          if (typeof supabaseClient !== "undefined" && supabaseClient) {
+            const { error } = await supabaseClient
+              .from("categories")
+              .update(catPayload)
+              .eq("id", catId);
+            if (error) {
+              console.error("Query failed: categories.update() during restore", error);
+              warnings.push(`Category "${catName}" update failed: ${error.message}`);
+            }
+          }
+          updatedCategoriesCount++;
+        } else {
+          if (typeof supabaseClient !== "undefined" && supabaseClient) {
+            const { error } = await supabaseClient
+              .from("categories")
+              .insert([catPayload]);
+            if (error) {
+              console.error("Query failed: categories.insert() during restore", error);
+              warnings.push(`Category "${catName}" creation failed: ${error.message}`);
+            }
+          }
+          restoredCategoriesCount++;
+        }
+      }
+      await loadAdminData();
+    }
+
+    // 2. Process Tools (Idempotent by id, name, or website URL)
+    if (jsonTools && jsonTools.length > 0) {
+      for (const jsonTool of jsonTools) {
+        if (!jsonTool || typeof jsonTool !== "object") continue;
+        const toolName = jsonTool.name ? String(jsonTool.name).trim() : "";
+        if (!toolName) continue;
+
+        let existing = adminTools.find(t => {
+          if (jsonTool.id && String(t.id) === String(jsonTool.id)) return true;
+          if (t.name && t.name.toLowerCase().trim() === toolName.toLowerCase()) return true;
+          const jsonUrl = (jsonTool.url || jsonTool.website || "").trim();
+          const existingUrl = (t.url || t.website || "").trim();
+          if (jsonUrl && jsonUrl !== "#" && existingUrl && existingUrl !== "#" && jsonUrl.toLowerCase() === existingUrl.toLowerCase()) return true;
+          return false;
+        });
+
+        let categoryName = jsonTool.category;
+        let categoryId = jsonTool.category_id;
+
+        if (categoryId && adminCategories.length > 0) {
+          const matchedCat = adminCategories.find(c => String(c.id) === String(categoryId));
+          if (matchedCat) categoryName = matchedCat.name;
+        } else if (categoryName && adminCategories.length > 0) {
+          const matchedCat = adminCategories.find(c => c.name.toLowerCase().trim() === String(categoryName).toLowerCase().trim());
+          if (matchedCat) categoryId = matchedCat.id;
+        }
+
+        if (!categoryName && existing) categoryName = existing.category;
+        if (!categoryName) categoryName = "Uncategorized";
+
+        const toolPayload = {
+          ...(existing ? existing : {}),
+          ...jsonTool,
+          name: toolName,
+          description: jsonTool.description || (existing ? existing.description : ""),
+          url: jsonTool.url || jsonTool.website || (existing ? (existing.url || existing.website) : "#"),
+          website: jsonTool.website || jsonTool.url || (existing ? (existing.website || existing.url) : "#"),
+          category: categoryName,
+          status: jsonTool.status || (existing ? existing.status : "published"),
+          homepage_position: jsonTool.homepage_position || (existing ? existing.homepage_position : (jsonTool.featured || jsonTool.sponsored ? "featured" : "none")),
+          accent_color: jsonTool.accent_color || jsonTool.color || (existing ? (existing.accent_color || existing.color) : "#4F8CFF"),
+          updated_at: jsonTool.updated_at || jsonTool.updatedAt || new Date().toISOString()
+        };
+
+        if (categoryId) {
+          toolPayload.category_id = categoryId;
+        }
+
+        if (existing) {
+          const toolId = existing.id;
+          if (typeof supabaseClient !== "undefined" && supabaseClient) {
+            const updatePayload = { ...toolPayload };
+            delete updatePayload.categories;
+
+            const { error } = await supabaseClient
+              .from("tools")
+              .update(updatePayload)
+              .eq("id", toolId);
+            if (error) {
+              console.error("Query failed: tools.update() during restore", error);
+              warnings.push(`Tool "${toolName}" update failed: ${error.message}`);
+            }
+          }
+          updatedToolsCount++;
+        } else {
+          if (typeof supabaseClient !== "undefined" && supabaseClient) {
+            const insertPayload = { ...toolPayload };
+            delete insertPayload.categories;
+
+            const { error } = await supabaseClient
+              .from("tools")
+              .insert([insertPayload]);
+            if (error) {
+              console.error("Query failed: tools.insert() during restore", error);
+              warnings.push(`Tool "${toolName}" creation failed: ${error.message}`);
+            }
+          }
+          restoredToolsCount++;
+        }
+      }
+    }
+
+    // 3. Process Settings
+    if (jsonSettings && typeof jsonSettings === "object") {
+      await StorageService.saveSettings(jsonSettings);
+      siteSettings = StorageService.getSettings();
+      settingsRestored = true;
+    }
+
+    await loadAdminData();
+    renderDashboard();
+
+    const summaryText = `
+✅ Restore Completed Successfully!
+• AI Tools: ${restoredToolsCount} created, ${updatedToolsCount} updated
+• Categories: ${restoredCategoriesCount} created, ${updatedCategoriesCount} updated
+• Site Settings: ${settingsRestored ? "Restored" : "No changes"}
+${warnings.length > 0 ? `\n⚠️ Warnings:\n${warnings.map(w => " - " + w).join("\n")}` : ""}
+    `.trim();
+
+    if (logPanel && logContent) {
+      logPanel.style.display = "block";
+      logContent.textContent = summaryText;
+    }
+
+    showToast(`Restore complete: ${restoredToolsCount + updatedToolsCount} tools and ${restoredCategoriesCount + updatedCategoriesCount} categories processed.`, "success");
+
+    return {
+      success: true,
+      restoredToolsCount,
+      updatedToolsCount,
+      restoredCategoriesCount,
+      updatedCategoriesCount,
+      settingsRestored,
+      warnings
+    };
+  }
+
   const exportBtn = document.getElementById("exportBackupBtn");
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
@@ -1357,29 +1548,77 @@
   }
 
   const importBtn = document.getElementById("importBackupBtn");
+  const quickImportBtn = document.getElementById("quickImportBtn");
   const importInput = document.getElementById("importBackupInput");
+  const restoreDropzone = document.getElementById("restoreDropzone");
 
-  if (importBtn && importInput) {
-    importBtn.addEventListener("click", () => importInput.click());
+  function triggerImport() {
+    if (importInput) {
+      importInput.value = "";
+      importInput.click();
+    }
+  }
+
+  if (importBtn) importBtn.addEventListener("click", triggerImport);
+  if (quickImportBtn) quickImportBtn.addEventListener("click", triggerImport);
+
+  async function handleFileSelected(file) {
+    if (!file) return;
+    if (!file.name.endsWith(".json") && file.type !== "application/json") {
+      showToast("Please select a valid .json file.", "error");
+      return;
+    }
+
+    const activeBtn = importBtn || quickImportBtn;
+    setButtonLoading(activeBtn, true, "Restoring JSON...");
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        await restoreDatasetFromJSON(evt.target.result);
+      } catch (err) {
+        showToast(`Restore error: ${err.message}`, "error");
+      } finally {
+        setButtonLoading(activeBtn, false);
+      }
+    };
+    reader.onerror = () => {
+      setButtonLoading(activeBtn, false);
+      showToast("Failed to read JSON file.", "error");
+    };
+    reader.readAsText(file);
+  }
+
+  if (importInput) {
     importInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
-      if (file) {
-        setButtonLoading(importBtn, true, "Importing...");
-        const reader = new FileReader();
-        reader.onload = async (evt) => {
-          try {
-            const data = JSON.parse(evt.target.result);
-            if (data.settings) await StorageService.saveSettings(data.settings);
-            showToast("Backup data loaded!", "success");
-            await loadAdminData();
-            renderDashboard();
-          } catch (err) {
-            showToast("Invalid JSON backup file format.", "error");
-          } finally {
-            setButtonLoading(importBtn, false);
-          }
-        };
-        reader.readAsText(file);
+      handleFileSelected(file);
+    });
+  }
+
+  if (restoreDropzone) {
+    ["dragenter", "dragover"].forEach(eventName => {
+      restoreDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        restoreDropzone.style.borderColor = "var(--admin-primary, #4F8CFF)";
+        restoreDropzone.style.background = "rgba(79, 140, 255, 0.08)";
+      });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      restoreDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        restoreDropzone.style.borderColor = "var(--admin-border)";
+        restoreDropzone.style.background = "var(--admin-surface)";
+      });
+    });
+
+    restoreDropzone.addEventListener("drop", (e) => {
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        handleFileSelected(files[0]);
       }
     });
   }

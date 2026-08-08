@@ -153,7 +153,8 @@
       <section class="view-section" id="toolsSection" style="display: none;">
         <div class="page-header">
           <h1 class="page-title">AI Tools Management</h1>
-          <div class="page-actions">
+          <div class="page-actions" style="display:flex; gap:10px;">
+            <button class="btn-secondary" id="quickImportBtn">📤 Import JSON</button>
             <button class="btn-primary" id="openAddToolModal">+ Add New AI Tool</button>
           </div>
         </div>
@@ -259,18 +260,25 @@
         <div class="page-header">
           <h1 class="page-title">Data Backup & Restore</h1>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:720px;">
-          <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px;">
-            <h3>Export JSON</h3>
-            <p style="color:var(--admin-text-muted); font-size:14px;">Download a JSON file containing all tools, categories, and site settings.</p>
-            <button class="btn-secondary" id="exportBackupBtn">📥 Export Backup JSON</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:760px;">
+          <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <h3 style="margin-top:0;">Export JSON</h3>
+              <p style="color:var(--admin-text-muted); font-size:14px; line-height:1.5;">Download a complete JSON file containing all current tools, categories, and site settings.</p>
+            </div>
+            <button class="btn-secondary" id="exportBackupBtn" style="margin-top:16px; width:100%;">📥 Export Backup JSON</button>
           </div>
-          <div style="background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:24px;">
-            <h3>Restore JSON</h3>
-            <p style="color:var(--admin-text-muted); font-size:14px;">Restore data from a previously exported JSON backup file.</p>
+          <div id="restoreDropzone" style="background:var(--admin-surface); border:2px dashed var(--admin-border); border-radius:12px; padding:24px; text-align:center; transition:border-color 0.2s, background 0.2s;">
+            <h3 style="margin-top:0;">Restore / Import JSON</h3>
+            <p style="color:var(--admin-text-muted); font-size:14px; line-height:1.5; margin-bottom:16px;">Drag & drop a JSON file here, or click to restore dataset idempotently.</p>
             <input type="file" id="importBackupInput" accept=".json" style="display:none;">
-            <button class="btn-secondary" id="importBackupBtn">📤 Restore from JSON</button>
+            <button class="btn-secondary" id="importBackupBtn" style="width:100%;">📤 Restore from JSON</button>
           </div>
+        </div>
+
+        <div id="restoreLogPanel" style="display:none; max-width:760px; margin-top:20px; background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:12px; padding:20px;">
+          <h4 style="margin:0 0 10px; font-size:15px; font-weight:600; color:var(--admin-text-bright);">Restore Operation Details</h4>
+          <div id="restoreLogContent" style="font-size:13px; color:var(--admin-text-muted); line-height:1.6; white-space:pre-wrap;"></div>
         </div>
       </section>
 

@@ -110,5 +110,42 @@ const StorageService = {
 
   setSettings(settings) {
     return this.saveSettings(settings);
+  },
+
+  parseAndValidateBackup(inputData) {
+    let parsed = inputData;
+    if (typeof inputData === "string") {
+      try {
+        parsed = JSON.parse(inputData);
+      } catch (err) {
+        throw new Error("Invalid JSON syntax: " + err.message);
+      }
+    }
+
+    if (!parsed || (typeof parsed !== "object" && !Array.isArray(parsed))) {
+      throw new Error("JSON source must be an array or object payload.");
+    }
+
+    let tools = [];
+    let categories = [];
+    let settings = null;
+
+    if (Array.isArray(parsed)) {
+      tools = parsed;
+    } else if (parsed.tools || parsed.categories || parsed.settings) {
+      if (Array.isArray(parsed.tools)) tools = parsed.tools;
+      if (Array.isArray(parsed.categories)) categories = parsed.categories;
+      if (parsed.settings && typeof parsed.settings === "object") settings = parsed.settings;
+    } else if (parsed.name && (parsed.url || parsed.website || parsed.description)) {
+      tools = [parsed];
+    } else {
+      throw new Error("Unrecognized JSON structure. Expected a tools array, category list, or directory backup object.");
+    }
+
+    return {
+      tools,
+      categories,
+      settings
+    };
   }
 };
