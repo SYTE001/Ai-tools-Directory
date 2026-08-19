@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
-Sitemap: https://xnovaa.ai/sitemap.xml
+Sitemap: https://xnovaa.web.id/sitemap.xml

@@ -5,7 +5,7 @@ const StorageService = {
 
   DEFAULT_SETTINGS: {
     siteTitle: "Xnovaa.ai — Discover Every AI Tool in One Place",
-    siteDescription: "Browse hundreds of curated AI tools across every category. Search, explore, and launch instantly.",
+    siteDescription: "Discover, explore, and access curated AI tools across different categories.",
     githubUrl: "https://github.com/SYTE001",
     twitterUrl: "https://x.com"
   },
