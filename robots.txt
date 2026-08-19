@@ -2,4 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
+User-agent: LinkedInBot
+Allow: /
+
 Sitemap: https://xnovaa.web.id/sitemap.xml
